@@ -4,17 +4,17 @@
   "type": "module",
   "scripts": {
     "start":          "node dist/index.js",
-    "build":          "tsc && bunx prisma generate && bunx prisma migrate deploy",
+    "build":          "tsc && bun x prisma generate && bun x prisma migrate deploy",
     "dev":            "tsx watch src/index.ts",
     "typecheck":      "tsc --noEmit",
     "lint":           "eslint src --ext .ts",
     "test":           "vitest run",
     "test:watch":     "vitest",
     "test:coverage":  "vitest run --coverage",
-    "db:generate":    "bunx prisma generate",
-    "db:migrate":     "bunx prisma migrate dev",
-    "db:deploy":      "bunx prisma migrate deploy",
-    "db:studio":      "bunx prisma studio",
+    "db:generate":    "bun x prisma generate",
+    "db:migrate":     "bun x prisma migrate dev",
+    "db:deploy":      "bun x prisma migrate deploy",
+    "db:studio":      "bun x prisma studio",
     "db:seed":        "tsx prisma/seed.ts"
   },
   "dependencies": {

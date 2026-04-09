@@ -15,15 +15,23 @@ const USER_PUBLIC_SELECT = {
   id: true, username: true, email: true, reputationScore: true, createdAt: true,
 } as const;
 
+type PublicUser = {
+  id: string;
+  username: string;
+  email: string;
+  reputationScore: number;
+  createdAt: Date;
+};
+
 export const register = async (data: RegisterBody): Promise<{ token: string; user: unknown }> => {
   const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS);
 
-  const user = await (async (): Promise<typeof USER_PUBLIC_SELECT & { id: string; email: string; username: string }> => {
+  const user = await (async (): Promise<PublicUser> => {
     try {
       return (await prisma.user.create({
         data: { username: data.username, email: data.email, passwordHash },
         select: USER_PUBLIC_SELECT,
-      })) as typeof USER_PUBLIC_SELECT & { id: string; email: string; username: string };
+      })) as PublicUser;
     } catch (err) {
       if (
         err instanceof Prisma.PrismaClientKnownRequestError &&
@@ -72,5 +80,5 @@ export const getProfile = async (userId: string): Promise<unknown> => {
 
 const signToken = (id: string, email: string, username: string): string =>
   jwt.sign({ id, email, username }, env.JWT_SECRET, {
-    expiresIn: env.JWT_EXPIRES_IN as import('jsonwebtoken').SignOptions['expiresIn'],
+    expiresIn: env.JWT_EXPIRES_IN as never,
   });

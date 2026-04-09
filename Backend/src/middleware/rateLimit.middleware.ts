@@ -7,7 +7,8 @@ import { redisClient } from '../config/redis.js';
 import { env } from '../config/env.js';
 
 const store = new RedisStore({
-  sendCommand: (...args: string[]): Promise<unknown> => redisClient.sendCommand(args),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sendCommand: (...args: string[]): Promise<any> => redisClient.sendCommand(args),
 });
 
 export const globalRateLimit = rateLimit({
