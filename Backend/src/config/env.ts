@@ -1,6 +1,7 @@
 // server/src/config/env.ts
 // Validated environment variables — import from here ONLY, never process.env directly.
 
+import 'dotenv/config';
 import { z } from 'zod';
 
 const schema = z.object({

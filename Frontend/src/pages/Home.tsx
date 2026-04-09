@@ -16,22 +16,31 @@ export default function Home() {
 
   const [showForm,    setShowForm]    = useState(false);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
+  const [draftCoords, setDraftCoords] = useState<{lat: number, lng: number} | null>(null);
 
   const handlePinClick = useCallback((pin: Pin) => {
     setSelectedPin(pin);
     setShowForm(false);
+    setDraftCoords(null);
   }, []);
 
   const handleFormOpen = () => {
     setSelectedPin(null);
     setShowForm(true);
+    setDraftCoords(null); // start fresh
   };
+
+  const handleMapClick = useCallback((lat: number, lng: number) => {
+    if (showForm) {
+      setDraftCoords({ lat, lng });
+    }
+  }, [showForm]);
 
   return (
     <div className="relative flex h-[calc(100vh-3.5rem)] overflow-hidden">
       {/* Left sidebar — neighborhoods */}
-      <aside className="hidden w-64 shrink-0 overflow-y-auto border-r border-gray-100 bg-white lg:block">
-        <NeighborhoodPanel />
+      <aside className="hidden w-72 shrink-0 overflow-y-auto border-r border-gray-100 bg-gray-50/30 lg:block">
+        <NeighborhoodPanel onPinClick={handlePinClick} />
       </aside>
 
       {/* Map fills remaining space */}
@@ -41,34 +50,44 @@ export default function Home() {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
           </div>
         )}
-        <MapView onPinClick={handlePinClick} />
+        <MapView 
+          onPinClick={handlePinClick} 
+          onMapClick={handleMapClick} 
+          draftCoords={draftCoords} 
+          focusCoords={selectedPin ? { lat: selectedPin.latitude, lng: selectedPin.longitude } : null}
+        />
 
         {/* FAB — drop pin */}
         <button
           onClick={handleFormOpen}
-          className="absolute bottom-6 right-6 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-transform"
+          className="absolute bottom-6 right-6 z-[1000] flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-transform"
           aria-label="Drop mood pin"
         >
           <Plus className="size-6" />
         </button>
       </div>
 
-      {/* Bottom drawer — PinForm */}
+      {/* Floating Panel — PinForm */}
       {showForm && (
-        <div className="absolute bottom-0 inset-x-0 z-30 rounded-t-2xl bg-white shadow-2xl">
-          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2">
-            <span className="text-sm font-medium text-gray-700">New Pin</span>
-            <button onClick={() => setShowForm(false)}>
-              <X className="size-5 text-gray-400" />
+        <div className="absolute bottom-0 inset-x-0 md:bottom-24 md:right-6 md:inset-x-auto md:w-96 z-[1010] rounded-t-3xl md:rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden transition-all">
+          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3 bg-gray-50/50">
+            <span className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Drop Mood Pin</span>
+            <button onClick={() => setShowForm(false)} className="rounded-full p-1 hover:bg-gray-200 transition-colors">
+              <X className="size-5 text-gray-500" />
             </button>
           </div>
-          <PinForm onClose={() => setShowForm(false)} />
+          <PinForm onClose={() => setShowForm(false)} selectedCoords={draftCoords} />
         </div>
       )}
 
-      {/* Bottom drawer — PinDetail */}
+      {/* Floating Panel — PinDetail */}
       {selectedPin && (
-        <div className="absolute bottom-0 inset-x-0 z-30 rounded-t-2xl bg-white shadow-2xl">
+        <div className="absolute bottom-0 inset-x-0 md:bottom-24 md:right-6 md:inset-x-auto md:w-96 z-[1010] rounded-t-3xl md:rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden transition-all">
+          <div className="flex items-center justify-end px-4 pt-3 absolute right-0 top-0 z-10">
+            <button onClick={() => setSelectedPin(null)} className="rounded-full bg-white/80 backdrop-blur-sm p-1.5 shadow-sm hover:bg-gray-100 transition-colors">
+              <X className="size-4 text-gray-600" />
+            </button>
+          </div>
           <PinDetail pin={selectedPin} onClose={() => setSelectedPin(null)} />
         </div>
       )}

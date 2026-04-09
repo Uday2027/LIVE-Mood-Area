@@ -6,31 +6,44 @@ import { RedisStore } from 'rate-limit-redis';
 import { redisClient } from '../config/redis.js';
 import { env } from '../config/env.js';
 
-const store = new RedisStore({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sendCommand: (...args: string[]): Promise<any> => redisClient.sendCommand(args),
-});
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
 
-export const globalRateLimit = rateLimit({
-  windowMs:       env.RATE_LIMIT_WINDOW_MS,
-  max:            env.RATE_LIMIT_MAX,
-  store,
-  standardHeaders: true,
-  legacyHeaders:   false,
-});
+const createStore = (prefix: string) =>
+  new RedisStore({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sendCommand: (...args: string[]): Promise<any> => redisClient.sendCommand(args),
+    prefix,
+  });
 
-export const pinRateLimit = rateLimit({
-  windowMs: 3_600_000,
-  max:      env.PIN_RATE_LIMIT_MAX,
-  store,
-  keyGenerator: (req) =>
-    (req.headers['x-session-id'] as string | undefined) ?? req.ip ?? 'unknown',
-});
+let loaders: Record<string, RequestHandler> = {};
 
-export const voteRateLimit = rateLimit({
-  windowMs: 3_600_000,
-  max:      env.VOTE_RATE_LIMIT_MAX,
-  store,
-  keyGenerator: (req) =>
-    (req.headers['x-session-id'] as string | undefined) ?? req.ip ?? 'unknown',
-});
+export const globalRateLimit = (req: Request, res: Response, next: NextFunction) => {
+  loaders.global ??= rateLimit({
+    windowMs:       env.RATE_LIMIT_WINDOW_MS,
+    max:            env.RATE_LIMIT_MAX,
+    store:          createStore('rl:global:'),
+    standardHeaders: true,
+    legacyHeaders:   false,
+  });
+  return loaders.global(req, res, next);
+};
+
+export const pinRateLimit = (req: Request, res: Response, next: NextFunction) => {
+  loaders.pin ??= rateLimit({
+    windowMs: 3_600_000,
+    max:      env.PIN_RATE_LIMIT_MAX,
+    store:    createStore('rl:pin:'),
+    keyGenerator: (r) => (r.headers['x-session-id'] as string | undefined) ?? r.ip ?? 'unknown',
+  });
+  return loaders.pin(req, res, next);
+};
+
+export const voteRateLimit = (req: Request, res: Response, next: NextFunction) => {
+  loaders.vote ??= rateLimit({
+    windowMs: 3_600_000,
+    max:      env.VOTE_RATE_LIMIT_MAX,
+    store:    createStore('rl:vote:'),
+    keyGenerator: (r) => (r.headers['x-session-id'] as string | undefined) ?? r.ip ?? 'unknown',
+  });
+  return loaders.vote(req, res, next);
+};

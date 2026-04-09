@@ -17,11 +17,11 @@ export const useSocket = (): void => {
     const socket = io(SOCKET_URL, { transports: ['websocket'] });
     socketRef.current = socket;
 
-    socket.on('new_pin',   (pin: Pin)                           => addPin(pin));
-    socket.on('pin_expired', ({ pinId }: { pinId: string })     => removePin(pinId));
-    socket.on('pin_removed', ({ pinId }: { pinId: string })     => removePin(pinId));
-    socket.on('pin_credibility_update', ({ id, credibilityScore }: { id: string; credibilityScore: number }) =>
-      updateCredib(id, credibilityScore),
+    socket.on('new_pin',   ({ pin }: { pin: Pin })                      => addPin(pin));
+    socket.on('pin_expired', ({ pinId }: { pinId: string })             => removePin(pinId));
+    socket.on('pin_removed', ({ pinId }: { pinId: string })             => removePin(pinId));
+    socket.on('pin_credibility_update', ({ pinId, credibilityScore }: { pinId: string; credibilityScore: number }) =>
+      updateCredib(pinId, credibilityScore),
     );
 
     return () => { socket.disconnect(); };

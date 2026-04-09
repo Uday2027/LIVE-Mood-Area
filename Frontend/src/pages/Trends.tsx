@@ -22,7 +22,7 @@ export default function Trends() {
       try {
         const zones = await getNeighborhoods();
         const histories = await Promise.all(
-          zones.map(async (z) => ({
+          (zones || []).map(async (z) => ({
             neighborhood: z,
             snapshots:    await getNeighborhoodHistory(z.id),
           })),
