@@ -2,7 +2,7 @@
 // Renders the Leaflet map and all active pins.
 // Uses useMemo on the pin list so the map doesn't re-render on unrelated state changes.
 import { useMemo, useRef } from 'react';
-import { MapContainer, TileLayer } from 'react-leaflet';
+import { MapContainer, TileLayer, Polyline, useMapEvents, Marker, useMap } from 'react-leaflet';
 import { usePinStore } from '@/store/usePinStore';
 import { MoodPinMarker } from './MoodPin';
 import type { Pin } from '@/api/pins';
@@ -27,8 +27,6 @@ const draftIcon = L.icon({
   tooltipAnchor: [16, -28],
   shadowSize: [41, 41],
 });
-
-import { useMapEvents, Marker, useMap } from 'react-leaflet';
 import { useEffect } from 'react';
 
 function MapPanner({ coords }: { coords: { lat: number; lng: number } | null }) {
@@ -50,16 +48,17 @@ function MapEvents({ onClick }: { onClick: (lat: number, lng: number) => void })
   return null;
 }
 
-type Props = { 
+type Props = {
   onPinClick: (pin: Pin) => void;
   onMapClick?: (lat: number, lng: number) => void;
   draftCoords?: { lat: number, lng: number } | null;
   focusCoords?: { lat: number, lng: number } | null;
+  activeRoute?: [number, number][] | null;
 };
 
-export const MapView = ({ onPinClick, onMapClick, draftCoords, focusCoords }: Props) => {
-  const pins       = usePinStore((s) => s.pins);
-  const mapRef     = useRef(null);
+export const MapView = ({ onPinClick, onMapClick, draftCoords, focusCoords, activeRoute }: Props) => {
+  const pins = usePinStore((s) => s.pins);
+  const mapRef = useRef(null);
 
   const validPins = useMemo(() => {
     // Defensively filter any malformed pins that might accidentally exist in Zustand
@@ -86,6 +85,12 @@ export const MapView = ({ onPinClick, onMapClick, draftCoords, focusCoords }: Pr
       />
       {onMapClick && <MapEvents onClick={onMapClick} />}
       <MapPanner coords={focusCoords ?? null} />
+      {activeRoute && (
+        <Polyline
+          positions={activeRoute}
+          pathOptions={{ color: '#3b82f6', weight: 5, opacity: 0.8 }}
+        />
+      )}
       {draftCoords && (
         <Marker position={[draftCoords.lat, draftCoords.lng]} icon={draftIcon} opacity={0.6} />
       )}

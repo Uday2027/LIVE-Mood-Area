@@ -1,10 +1,10 @@
 // src/components/Panel/NeighborhoodPanel.tsx
 import { usePinStore } from '@/store/usePinStore';
 import { MoodBadge } from '@/components/UI/MoodBadge';
-import { getMoodColor, type Mood } from '@/utils/moodColors';
+import { getMoodColor, MOOD_COLORS, type Mood } from '@/utils/moodColors';
 import { cn } from '@/lib/utils';
 import { MapPin, Clock, ChevronDown, ChevronRight } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { Pin } from '@/api/pins';
 
 // Calculates a quick relative time string
@@ -15,12 +15,44 @@ const timeAgo = (dateStr: string) => {
   return `${Math.floor(diff / 60)}h ago`;
 };
 
+// Global cache to prevent re-fetching the same IP reverse-geo
+const GEO_CACHE: Record<string, string> = {};
+
+const PinLocationName = ({ pin }: { pin: Pin }) => {
+  const [name, setName] = useState<string | null>(GEO_CACHE[pin.id] || null);
+
+  useEffect(() => {
+    if (name || pin.message) return;
+    
+    let mounted = true;
+    const fetchGeo = async () => {
+      try {
+        const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${pin.latitude}&longitude=${pin.longitude}&localityLanguage=en`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const resolved = data.locality || data.city || data.principalSubdivision || 'Unknown Location';
+        if (mounted) {
+           GEO_CACHE[pin.id] = resolved;
+           setName(resolved);
+        }
+      } catch {
+        if (mounted) setName('Unknown Location');
+      }
+    };
+    fetchGeo();
+    return () => { mounted = false; };
+  }, [pin.id, pin.latitude, pin.longitude, pin.message, name]);
+
+  if (pin.message) return <>{pin.message}</>;
+  return <>{name || 'Resolving...'}</>;
+};
+
 type Props = {
   onPinClick: (pin: Pin) => void;
 };
 
-// Fixed list of Moods to group by
-const MOODS: Mood[] = ['CHILL', 'HYPE', 'FOCUSED', 'ROMANTIC', 'SKETCHY'];
+// List of all Moods to group by
+const MOODS: Mood[] = Object.keys(MOOD_COLORS) as Mood[];
 
 export const NeighborhoodPanel = ({ onPinClick }: Props) => {
   const pins = usePinStore((s) => s.pins);
@@ -41,9 +73,8 @@ export const NeighborhoodPanel = ({ onPinClick }: Props) => {
       .filter((p) => p && p.id && typeof p.latitude === 'number')
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
-    const groups: Record<Mood, Pin[]> = {
-      CHILL: [], HYPE: [], FOCUSED: [], ROMANTIC: [], SKETCHY: []
-    };
+    const groups: Record<string, Pin[]> = {};
+    MOODS.forEach(m => groups[m] = []);
     
     validPins.forEach(pin => {
       if (groups[pin.mood]) groups[pin.mood].push(pin);
@@ -103,7 +134,7 @@ export const NeighborhoodPanel = ({ onPinClick }: Props) => {
                     >
                       <div className="flex items-start justify-between">
                          <span className="text-xs font-medium text-gray-800 line-clamp-1">
-                           {pin.message || "Unknown Location"}
+                           <PinLocationName pin={pin} />
                          </span>
                         <div className="flex items-center gap-1 mt-0.5 text-gray-400 shrink-0">
                           <Clock className="size-3" />

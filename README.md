@@ -15,6 +15,10 @@ MoodMap is a real-time web application where users anonymously drop "mood pins" 
 - **Mood Trends** — Charts showing how a neighborhood's vibe changes throughout the day
 - **Auto-Expiry** — Pins automatically disappear after 2 hours to keep data fresh
 - **Optional Accounts** — Save your pin history and earn badges
+- **Native In-App Routing** — Calculate and draw street-level routes from your GPS to any pin using OSRM
+- **Live Activity Feed** — Sidebar grouped by mood with real-time updates and map panning
+- **Smart Geocoding** — Automatically resolves GPS coordinates to human-readable location names
+- **Session Security** — Manage and delete your own pins via secure device-fingerprinting (no login required)
 
 ---
 
@@ -27,6 +31,10 @@ MoodMap is a real-time web application where users anonymously drop "mood pins" 
 | Focused | 🟢 | Great for work or studying |
 | Romantic | 🔵 | Date-night worthy |
 | Sketchy | 🟠 | Safety heads-up for others |
+| Nature | 🍃 | Soothing, green viewpoints |
+| Study | 📚 | Quiet places for focus |
+| Festive | 🎉 | Celebrations and events |
+| Relaxing | ☕ | Calm spots to unwind |
 
 ---
 
@@ -51,6 +59,11 @@ MoodMap is a real-time web application where users anonymously drop "mood pins" 
 ### Deployment
 - **Vercel** — Frontend hosting
 - **Railway** — Backend + PostgreSQL hosting
+
+### APIs & Tools
+- **OSRM (Open Source Routing Machine)** — Native street-level routing
+- **BigDataCloud** — Client-side reverse geocoding
+- **Redis** — High-performance real-time data caching
 
 ---
 
@@ -222,15 +235,17 @@ Backend runs at `http://localhost:5000`
 ## 🗓️ Build Roadmap
 
 - [x] Project setup & planning
-- [ ] PostgreSQL schema + Prisma setup
-- [ ] REST API (pins, neighborhoods, votes)
-- [ ] React map with Leaflet + pin dropping
-- [ ] Socket.io real-time pin updates
-- [ ] Verification / voting system
-- [ ] Neighborhood mood scoring + heatmap
-- [ ] Mood trends page with charts
-- [ ] Optional auth + user dashboard
-- [ ] Deploy to Vercel + Railway
+- [x] PostgreSQL schema + Prisma setup
+- [x] REST API (pins, neighborhoods, votes)
+- [x] React map with Leaflet + pin dropping
+- [x] Socket.io real-time pin updates
+- [x] Verification / voting system
+- [x] Neighborhood mood scoring + heatmap
+- [x] Mood trends page with charts
+- [x] Optional auth + user dashboard
+- [x] Deploy to Vercel + Railway
+- [x] Native In-App OSRM Routing
+- [x] Dynamic Live Mood Feed & Geocoding
 
 ---
 

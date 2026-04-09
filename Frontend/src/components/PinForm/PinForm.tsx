@@ -1,5 +1,5 @@
 // src/components/PinForm/PinForm.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
 import { MoodSelector } from './MoodSelector';
 import { useLocation } from '@/hooks/useLocation';
@@ -10,15 +10,22 @@ import type { Mood } from '@/utils/moodColors';
 type Props = { 
   onClose: () => void;
   selectedCoords?: { lat: number, lng: number } | null;
+  onGpsSuccess?: (lat: number, lng: number) => void;
 };
 
-export const PinForm = ({ onClose, selectedCoords }: Props) => {
+export const PinForm = ({ onClose, selectedCoords, onGpsSuccess }: Props) => {
   const [mood,    setMood]    = useState<Mood | null>(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
   const { coords: gpsCoords, requesting, error: locError, requestLocation } = useLocation();
   const addPin = usePinStore((s) => s.addPin);
+
+  useEffect(() => {
+    if (gpsCoords && onGpsSuccess) {
+      onGpsSuccess(gpsCoords.lat, gpsCoords.lng);
+    }
+  }, [gpsCoords, onGpsSuccess]);
 
   const finalCoords = selectedCoords || gpsCoords;
 

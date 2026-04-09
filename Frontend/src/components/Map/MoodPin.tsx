@@ -23,9 +23,9 @@ const createMoodIcon = (mood: string, opacity: number): L.DivIcon => {
       box-shadow:0 2px 6px rgba(0,0,0,.25);
     "><span style="transform:rotate(45deg);font-size:14px">${emoji}</span></div>`,
     className: '',
-    iconSize:   [32, 32],
+    iconSize: [32, 32],
     iconAnchor: [16, 32],
-    popupAnchor:[0, -34],
+    popupAnchor: [0, -34],
   });
 };
 
@@ -36,7 +36,7 @@ type Props = {
 
 export const MoodPinMarker = ({ pin, onClick }: Props) => {
   const opacity = pinOpacity(pin.credibilityScore);
-  const icon    = useMemo(
+  const icon = useMemo(
     () => createMoodIcon(pin.mood, opacity),
     [pin.mood, opacity],
   );

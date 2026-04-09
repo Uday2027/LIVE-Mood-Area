@@ -4,7 +4,7 @@ import { Navbar } from '@/components/UI/Navbar';
 import { ProtectedRoute } from '@/components/UI/ProtectedRoute';
 import Home from '@/pages/Home';
 import Trends from '@/pages/Trends';
-import Dashboard from '@/pages/Dashboard';
+import About from '@/pages/About';
 
 export default function App() {
   return (
@@ -14,9 +14,7 @@ export default function App() {
         <Routes>
           <Route path="/"          element={<Home />} />
           <Route path="/trends"    element={<Trends />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute><Dashboard /></ProtectedRoute>
-          } />
+          <Route path="/about"     element={<About />} />
         </Routes>
       </main>
     </BrowserRouter>

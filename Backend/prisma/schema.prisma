@@ -18,6 +18,10 @@ enum Mood {
   FOCUSED
   ROMANTIC
   SKETCHY
+  NATURE
+  STUDY
+  FESTIVE
+  RELAXING
 }
 
 enum VoteType {

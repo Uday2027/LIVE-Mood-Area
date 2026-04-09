@@ -1,13 +1,13 @@
 // src/components/UI/Navbar.tsx
 import { Link, useLocation } from 'react-router-dom';
-import { MapPin, TrendingUp, LayoutDashboard } from 'lucide-react';
+import { MapPin, TrendingUp, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/useAuthStore';
 
 const NAV_LINKS = [
   { to: '/',          label: 'Map',       icon: MapPin },
   { to: '/trends',    label: 'Trends',    icon: TrendingUp },
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/about',     label: 'About',      icon: Info },
 ];
 
 export const Navbar = () => {
@@ -53,10 +53,10 @@ export const Navbar = () => {
           </div>
         ) : (
           <Link
-            to="/dashboard"
+            to="/about"
             className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
           >
-            Sign in
+            Explore
           </Link>
         )}
       </div>

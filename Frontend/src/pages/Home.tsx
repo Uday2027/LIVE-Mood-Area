@@ -17,24 +17,32 @@ export default function Home() {
   const [showForm,    setShowForm]    = useState(false);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
   const [draftCoords, setDraftCoords] = useState<{lat: number, lng: number} | null>(null);
+  const [activeRoute, setActiveRoute] = useState<[number, number][] | null>(null);
 
   const handlePinClick = useCallback((pin: Pin) => {
     setSelectedPin(pin);
     setShowForm(false);
     setDraftCoords(null);
+    setActiveRoute(null);
   }, []);
 
   const handleFormOpen = () => {
     setSelectedPin(null);
     setShowForm(true);
     setDraftCoords(null); // start fresh
+    setActiveRoute(null);
   };
 
   const handleMapClick = useCallback((lat: number, lng: number) => {
     if (showForm) {
       setDraftCoords({ lat, lng });
     }
+    setActiveRoute(null);
   }, [showForm]);
+
+  const handleGpsSuccess = useCallback((lat: number, lng: number) => {
+    setDraftCoords({ lat, lng });
+  }, []);
 
   return (
     <div className="relative flex h-[calc(100vh-3.5rem)] overflow-hidden">
@@ -54,7 +62,8 @@ export default function Home() {
           onPinClick={handlePinClick} 
           onMapClick={handleMapClick} 
           draftCoords={draftCoords} 
-          focusCoords={selectedPin ? { lat: selectedPin.latitude, lng: selectedPin.longitude } : null}
+          focusCoords={selectedPin ? { lat: selectedPin.latitude, lng: selectedPin.longitude } : draftCoords}
+          activeRoute={activeRoute}
         />
 
         {/* FAB — drop pin */}
@@ -76,7 +85,11 @@ export default function Home() {
               <X className="size-5 text-gray-500" />
             </button>
           </div>
-          <PinForm onClose={() => setShowForm(false)} selectedCoords={draftCoords} />
+          <PinForm 
+            onClose={() => setShowForm(false)} 
+            selectedCoords={draftCoords} 
+            onGpsSuccess={handleGpsSuccess}
+          />
         </div>
       )}
 
@@ -88,7 +101,11 @@ export default function Home() {
               <X className="size-4 text-gray-600" />
             </button>
           </div>
-          <PinDetail pin={selectedPin} onClose={() => setSelectedPin(null)} />
+          <PinDetail 
+            pin={selectedPin} 
+            onClose={() => setSelectedPin(null)} 
+            onRouteFound={setActiveRoute}
+          />
         </div>
       )}
     </div>
