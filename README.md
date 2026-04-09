@@ -35,7 +35,7 @@ MoodMap is a real-time web application where users anonymously drop "mood pins" 
 ### Frontend
 - **React + Vite** — UI framework
 - **Leaflet.js** — Interactive map rendering
-- **Tailwind CSS** — Styling
+- **Shadcn + Tailwind CSS** — Styling
 - **Recharts** — Mood trend charts
 - **Socket.io Client** — Real-time updates
 

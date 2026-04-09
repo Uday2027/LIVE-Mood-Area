@@ -1,0 +1,20 @@
+// server/src/config/database.ts
+// Prisma client singleton — never instantiate per-request.
+
+import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = globalThis as typeof globalThis & {
+  prisma?: PrismaClient;
+};
+
+export const prisma: PrismaClient =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env['NODE_ENV'] === 'development'
+      ? ['query', 'error', 'warn']
+      : ['error'],
+  });
+
+if (process.env['NODE_ENV'] !== 'production') {
+  globalForPrisma.prisma = prisma;
+}

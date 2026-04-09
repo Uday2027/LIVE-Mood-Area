@@ -1,0 +1,114 @@
+// server/prisma/schema.prisma
+// Single source of truth for all models. Run `bunx prisma generate` after changes.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+enum Mood {
+  CHILL
+  HYPE
+  FOCUSED
+  ROMANTIC
+  SKETCHY
+}
+
+enum VoteType {
+  CONFIRM
+  DISPUTE
+}
+
+// ── Models ───────────────────────────────────────────────────────────────────
+
+model User {
+  id              String   @id @default(uuid())
+  username        String   @unique
+  email           String   @unique
+  passwordHash    String
+  reputationScore Float    @default(1.0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  pins MoodPin[]
+
+  @@index([email])
+}
+
+model Neighborhood {
+  id        String   @id @default(uuid())
+  name      String
+  city      String
+  boundary  Json     // GeoJSON Polygon
+  createdAt DateTime @default(now())
+
+  pins      MoodPin[]
+  snapshots MoodSnapshot[]
+
+  @@index([city])
+}
+
+model MoodPin {
+  id               String       @id @default(uuid())
+  mood             Mood
+  message          String?      @db.VarChar(100)
+  latitude         Float
+  longitude        Float
+  credibilityScore Float        @default(0.5)
+  sessionId        String
+  userId           String?
+  neighborhoodId   String?
+  expiresAt        DateTime
+  createdAt        DateTime     @default(now())
+
+  user         User?         @relation(fields: [userId],         references: [id])
+  neighborhood Neighborhood? @relation(fields: [neighborhoodId], references: [id])
+  votes        PinVote[]
+
+  @@index([expiresAt])
+  @@index([neighborhoodId, expiresAt])
+  @@index([sessionId])
+}
+
+model PinVote {
+  id        String   @id @default(uuid())
+  pinId     String
+  sessionId String
+  vote      VoteType
+  createdAt DateTime @default(now())
+
+  pin MoodPin @relation(fields: [pinId], references: [id], onDelete: Cascade)
+
+  @@unique([pinId, sessionId]) // prevents double-voting
+  @@index([pinId])
+}
+
+model SessionReputation {
+  id              String   @id @default(uuid())
+  sessionId       String   @unique
+  reputationScore Float    @default(1.0)
+  pinCount        Int      @default(0)
+  disputeCount    Int      @default(0)
+  updatedAt       DateTime @updatedAt
+
+  @@index([sessionId])
+}
+
+model MoodSnapshot {
+  id             String   @id @default(uuid())
+  neighborhoodId String
+  dominantMood   Mood?
+  moodScore      Float    @default(0.0)
+  pinCount       Int      @default(0)
+  recordedAt     DateTime @default(now())
+
+  neighborhood Neighborhood @relation(fields: [neighborhoodId], references: [id])
+
+  @@index([neighborhoodId, recordedAt])
+}
