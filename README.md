@@ -64,6 +64,9 @@ pin_votes       → Confirm/dispute votes per pin per session
 session_reputation → Tracks anonymous user reliability over time
 ```
 
+![Database Design](Public/db_desing.png)
+
+
 ---
 
 ## ⚡ How Real-Time Works
