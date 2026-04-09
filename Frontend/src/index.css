@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+  }
+
+  body {
+    font-family: 'Geist Variable', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background-color: #f9fafb;
+    color: #111827;
+  }
+}
+

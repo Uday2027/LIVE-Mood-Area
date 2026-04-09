@@ -1,0 +1,2 @@
+/* Geist variable font — imported before tailwindcss to avoid PostCSS ordering conflict */
+@import "@fontsource-variable/geist/index.css";
