@@ -114,7 +114,7 @@ Thumbs.db
 *.swo
 
 # Project specific
-/server/dist/
-/client/dist/
-/client/build/
+Backend/dist/
+Frontend/dist/
+Frontend/build/
 /AGENT.md
