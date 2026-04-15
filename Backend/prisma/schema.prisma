@@ -24,6 +24,13 @@ enum Mood {
   RELAXING
 }
 
+enum CheckStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
 enum VoteType {
   CONFIRM
   DISPUTE
@@ -72,6 +79,9 @@ model User {
   circleMessages CircleMessage[]
   badges         UserBadge[]
   stories        MoodStory[]
+  vibeChecksReceived VibeCheck[] @relation("Receiver")
+  vibeChecksSent     VibeCheck[] @relation("Sender")
+  questCompletions    QuestCompletion[]
 
   @@index([email])
 }
@@ -87,6 +97,7 @@ model Neighborhood {
   snapshots   MoodSnapshot[]
   vibeCircles VibeCircle[]
   stories     MoodStory[]
+  battleScores BattleScore[]
 
   @@index([city])
 }
@@ -286,4 +297,83 @@ model Waitlist {
 
   @@index([referralCode])
   @@index([position])
+}
+
+model DailyQuest {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  moodType    Mood?
+  targetCount Int      @default(1)
+  rewardBadge BadgeType?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  completions QuestCompletion[]
+}
+
+model QuestCompletion {
+  id        String   @id @default(uuid())
+  questId   String
+  userId    String?
+  sessionId String
+  completedAt DateTime @default(now())
+
+  quest DailyQuest @relation(fields: [questId], references: [id], onDelete: Cascade)
+  user  User?      @relation(fields: [userId], references: [id])
+
+  @@unique([questId, sessionId])
+}
+
+model NeighborhoodBattle {
+  id             String   @id @default(uuid())
+  title          String
+  startTime      DateTime
+  endTime        DateTime
+  status         String   // ACTIVE, COMPLETED
+  winnerId       String?
+  createdAt      DateTime @default(now())
+
+  scores         BattleScore[]
+}
+
+model BattleScore {
+  id             String   @id @default(uuid())
+  battleId       String
+  neighborhoodId String
+  score          Float    @default(0.0)
+  updatedAt      DateTime @updatedAt
+
+  battle       NeighborhoodBattle @relation(fields: [battleId], references: [id], onDelete: Cascade)
+  neighborhood Neighborhood       @relation(fields: [neighborhoodId], references: [id])
+
+  @@unique([battleId, neighborhoodId])
+}
+
+model VibeCheck {
+  id              String      @id @default(uuid())
+  senderId        String      // sessionId or userId
+  receiverId      String
+  senderMood      Mood
+  receiverMood    Mood?
+  status          CheckStatus @default(PENDING)
+  createdAt       DateTime    @default(now())
+  expiresAt       DateTime
+
+  sender   User? @relation("Sender",   fields: [senderId],   references: [id])
+  receiver User? @relation("Receiver", fields: [receiverId], references: [id])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  sessionId String   @unique
+  userId    String?
+  endpoint  String   @db.Text
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([userId])
 }

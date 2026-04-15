@@ -9,6 +9,7 @@ import type { CreatePinBody } from '../validators/pin.validator.js';
 
 const PIN_LIFETIME_MS = 2 * 60 * 60 * 1_000; // 2 hours
 
+const ACTIVE_PIN_SELECT = {
   id: true,
   mood: true,
   message: true,

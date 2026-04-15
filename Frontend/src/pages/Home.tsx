@@ -9,6 +9,9 @@ import { NeighborhoodPanel } from '@/components/Panel/NeighborhoodPanel';
 import { NearbyCount } from '@/components/Social/NearbyCount';
 import { VibeMatch } from '@/components/Social/VibeMatch';
 import { ProximityPing } from '@/components/Social/ProximityPing';
+import { QuestBanner } from '@/components/Gamification/QuestBanner';
+import { BattleLeaderboard } from '@/components/Gamification/BattleLeaderboard';
+import { PushPrompt } from '@/components/Social/PushPrompt';
 import { useSocket } from '@/hooks/useSocket';
 import { useNearby } from '@/hooks/useNearby';
 import { usePins } from '@/hooks/usePins';
@@ -56,7 +59,10 @@ export default function Home() {
   return (
     <div className="relative flex h-[calc(100vh-3.5rem)] overflow-hidden">
       {/* Left sidebar — neighborhoods */}
-      <aside className="hidden w-72 shrink-0 overflow-y-auto border-r border-gray-100 bg-gray-50/30 lg:block">
+      <aside className="hidden w-72 shrink-0 flex-col overflow-y-auto border-r border-gray-100 bg-gray-50/30 lg:flex">
+        <div className="p-4">
+          <BattleLeaderboard />
+        </div>
         <NeighborhoodPanel onPinClick={handlePinClick} />
       </aside>
 
@@ -74,6 +80,8 @@ export default function Home() {
           focusCoords={selectedPin ? { lat: selectedPin.latitude, lng: selectedPin.longitude } : draftCoords}
           activeRoute={activeRoute}
         />
+
+        <QuestBanner />
 
         {/* FAB — drop pin */}
         <button
@@ -128,6 +136,8 @@ export default function Home() {
       {activePings.map(ping => (
          <ProximityPing key={ping.id} ping={ping} onDismiss={() => removePing(ping.id)} />
       ))}
+
+      <PushPrompt />
     </div>
   );
 }

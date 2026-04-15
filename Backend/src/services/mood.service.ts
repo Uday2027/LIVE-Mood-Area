@@ -3,6 +3,7 @@
 
 import { prisma } from '../config/database.js';
 import { AppError } from '../utils/AppError.js';
+import { withCache } from '../utils/cache.js';
 import type { Mood } from '@prisma/client';
 
 type MoodScore = {
@@ -14,38 +15,30 @@ type MoodScore = {
 };
 
 export const getNeighborhoodMood = async (neighborhoodId: string): Promise<MoodScore> => {
-  const neighborhood = await prisma.neighborhood.findUnique({
-    where: { id: neighborhoodId },
-    select: { id: true },
+  const latestSnapshot = await prisma.moodSnapshot.findFirst({
+    where: { neighborhoodId },
+    orderBy: { recordedAt: 'desc' },
   });
 
-  if (neighborhood === null) throw new AppError('Neighborhood not found', 404);
-
-  const groups = await prisma.moodPin.groupBy({
-    by: ['mood'],
-    where: { neighborhoodId, expiresAt: { gt: new Date() } },
-    _sum: { credibilityScore: true },
-    orderBy: { _sum: { credibilityScore: 'desc' } },
-  });
-
-  if (groups.length === 0) {
-    return { neighborhoodId, dominantMood: null, moodScore: 0, pinCount: 0, breakdown: {} };
+  if (!latestSnapshot) {
+    return { 
+      neighborhoodId, 
+      dominantMood: null, 
+      moodScore:    0, 
+      pinCount:     0, 
+      breakdown:    {} 
+    };
   }
 
-  const pinCount = groups.reduce(
-    (acc, g) => acc + (g._sum.credibilityScore ?? 0),
-    0,
-  );
-
-  const breakdown = Object.fromEntries(
-    groups.map((g) => [g.mood, g._sum.credibilityScore ?? 0]),
-  );
-
-  const topGroup = groups[0];
-  const dominantMood  = topGroup?.mood ?? null;
-  const moodScore     = topGroup?._sum.credibilityScore ?? 0;
-
-  return { neighborhoodId, dominantMood, moodScore, pinCount, breakdown };
+  // Note: Breakdown is not stored in snapshots in v1, 
+  // we could potentially add it to snapshots if needed for the UI.
+  return {
+    neighborhoodId,
+    dominantMood: latestSnapshot.dominantMood,
+    moodScore:    latestSnapshot.moodScore,
+    pinCount:     latestSnapshot.pinCount,
+    breakdown:    {}, // Optional: populate if schema changes to include JSON breakdown
+  };
 };
 
 export const getMoodHistory = async (
@@ -72,6 +65,8 @@ export const getMoodHistory = async (
 };
 
 export const getAllNeighborhoods = async (): Promise<unknown[]> =>
-  prisma.neighborhood.findMany({
-    select: { id: true, name: true, city: true, boundary: true },
-  });
+  withCache('moodmap:neighborhoods', 60, () =>
+    prisma.neighborhood.findMany({
+      select: { id: true, name: true, city: true, boundary: true },
+    })
+  );

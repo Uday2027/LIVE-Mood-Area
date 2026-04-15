@@ -1,5 +1,5 @@
 // src/pages/Profile.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LogOut, Ghost, MapPin, Star, Award,
@@ -8,7 +8,6 @@ import {
 import { useAuthStore } from '@/store/useAuthStore';
 import { getMe } from '@/api/auth';
 import { getMoodColor, type Mood, MOODS } from '@/utils/moodColors';
-import type { MoodDistEntry } from '@/api/auth';
 import toast from 'react-hot-toast';
 import { MoodCalendar } from '@/components/Profile/MoodCalendar';
 import { MoodWrapped } from '@/components/Profile/MoodWrapped';
@@ -48,6 +47,45 @@ export default function Profile() {
     navigate('/');
   };
 
+  const earnedBadges      = user?.badges ?? [];
+  const totalPins         = user?.totalPins ?? 0;
+  const reputation        = user?.reputationScore?.toFixed(2) ?? '1.00';
+  const moodDistribution  = user?.moodDistribution ?? [];
+  const rawPinHistory     = user?.pinHistory ?? [];
+  const dominantMood      = (user?.dominantMood as Mood) ?? 'CHILL';
+  const neighborhoods     = user?.neighborhoodsVisited ?? 0;
+  const allBadgeKeys      = Object.keys(BADGE_META);
+  const initials          = user?.username?.slice(0, 2).toUpperCase() ?? 'ME';
+
+  // Group pins by day for the heat map
+  const calendarHistory = useMemo(() => {
+    const grouped: Record<string, { mood: Mood; count: number }[]> = {};
+    
+    rawPinHistory.forEach(p => {
+      const d = p.createdAt.split('T')[0];
+      if (!grouped[d]) grouped[d] = [];
+      const existing = grouped[d].find(m => m.mood === p.mood);
+      if (existing) existing.count++;
+      else grouped[d].push({ mood: p.mood as Mood, count: 1 });
+    });
+
+    return Object.entries(grouped).map(([date, moods]) => {
+      const best = moods.reduce((a, b) => a.count > b.count ? a : b);
+      return {
+        date,
+        dominantMood: best.mood,
+        pinCount: moods.reduce((sum, m) => sum + m.count, 0)
+      };
+    });
+  }, [rawPinHistory]);
+
+  const totalMoodPins = moodDistribution.reduce((sum, m) => sum + m.count, 0);
+  const getMoodPct = (mood: Mood): number => {
+    const entry = moodDistribution.find((m) => m.mood === mood);
+    if (!entry || totalMoodPins === 0) return 0;
+    return Math.round((entry.count / totalMoodPins) * 100);
+  };
+
   if (!user) {
     navigate('/login');
     return null;
@@ -65,21 +103,6 @@ export default function Profile() {
       </div>
     );
   }
-
-  const earnedBadges      = user.badges ?? [];
-  const totalPins         = user.totalPins ?? 0;
-  const reputation        = user.reputationScore?.toFixed(2) ?? '1.00';
-  const moodDistribution  = user.moodDistribution ?? [];
-  const pinHistory        = user.pinHistory ?? [];
-  const allBadgeKeys      = Object.keys(BADGE_META);
-  const initials          = user.username?.slice(0, 2).toUpperCase() ?? 'ME';
-
-  const totalMoodPins = moodDistribution.reduce((sum, m) => sum + m.count, 0);
-  const getMoodPct = (mood: Mood): number => {
-    const entry = moodDistribution.find((m) => m.mood === mood);
-    if (!entry || totalMoodPins === 0) return 0;
-    return Math.round((entry.count / totalMoodPins) * 100);
-  };
 
   return (
     <div
@@ -207,10 +230,10 @@ export default function Profile() {
 
         {/* Vibe History Calendar */}
         <Section icon={<Calendar className="size-4 text-emerald-400" />} title="Vibe History">
-          <MoodCalendar history={pinHistory} />
+          <MoodCalendar history={calendarHistory} />
           <p className="mt-2 text-xs text-slate-500">
-            {pinHistory.length > 0
-              ? `${pinHistory.length} pins in the last 90 days`
+            {rawPinHistory.length > 0
+              ? `${rawPinHistory.length} pins in the last 90 days`
               : 'No history yet — drop your first pin!'}
           </p>
         </Section>
@@ -219,11 +242,11 @@ export default function Profile() {
         <Section icon={<ChevronRight className="size-4 text-purple-400" />} title="This Week's Wrap">
           <MoodWrapped
             data={{
-              dominantMood:         'HYPE',
-              neighborhoodsVisited: 4,
+              dominantMood,
+              neighborhoodsVisited: neighborhoods,
               totalPins,
-              highlight:            'Most verified: "Huge party at TSC!"',
-              weekRange:            'This Week',
+              highlight:            totalPins > 0 ? `Active explorer with ${totalPins} vibes shared!` : 'Just getting started!',
+              weekRange:            'All Time',
             }}
           />
         </Section>

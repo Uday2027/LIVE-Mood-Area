@@ -6,6 +6,8 @@ import { startSnapshotJob } from './snapshotJob.js';
 import { startExpireJob }   from './expireJob.js';
 import { startMatchJob }    from './matchJob.js';
 import { startCircleJob }   from './circleJob.js';
+import { startQuestJob, initQuest } from './questJob.js';
+import { startBattleJob, initBattle } from './battleJob.js';
 import { logger }           from '../utils/logger.js';
 
 export const startJobs = (io: Server): void => {
@@ -13,5 +15,12 @@ export const startJobs = (io: Server): void => {
   startExpireJob(io);
   startMatchJob(io);
   startCircleJob(io);
-  logger.info('Background jobs started (snapshot, expire, match, circle)');
+  startQuestJob();
+  startBattleJob();
+  
+  // Initial runs
+  initQuest().catch(() => {});
+  initBattle().catch(() => {});
+
+  logger.info('Background jobs started (snapshot, expire, match, circle, quest, battle)');
 };

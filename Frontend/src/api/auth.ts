@@ -18,6 +18,8 @@ export type AuthUser = {
   badges?: BadgeEntry[];
   pinHistory?: PinHistoryEntry[];
   moodDistribution?: MoodDistEntry[];
+  dominantMood?: string | null;
+  neighborhoodsVisited?: number;
 };
 
 export type AuthResponse = { token: string; user: AuthUser };

@@ -91,7 +91,7 @@ export const getProfile = async (userId: string): Promise<unknown> => {
 
   if (user === null) throw new AppError('User not found', 404);
 
-  const [badges, pinHistory, moodCounts] = await Promise.all([
+  const [badges, pinHistory, moodCounts, neighborhoodCounts] = await Promise.all([
     prisma.userBadge.findMany({
       where:   { userId },
       select:  { badgeType: true, earnedAt: true },
@@ -108,13 +108,24 @@ export const getProfile = async (userId: string): Promise<unknown> => {
       where: { userId },
       _count: { mood: true },
     }),
+    prisma.moodPin.groupBy({
+      by:    ['neighborhoodId'],
+      where: { userId, neighborhoodId: { not: null } },
+    }),
   ]);
+
+  const moodDistribution = moodCounts.map((m) => ({ mood: m.mood, count: m._count.mood }));
+  const dominantMood = moodDistribution.length > 0 
+    ? moodDistribution.reduce((prev, current) => (prev.count > current.count) ? prev : current).mood 
+    : null;
 
   return {
     ...user,
     badges: badges as BadgeItem[],
     pinHistory: pinHistory as PinHistoryItem[],
-    moodDistribution: moodCounts.map((m) => ({ mood: m.mood, count: m._count.mood })),
+    moodDistribution,
+    dominantMood,
+    neighborhoodsVisited: neighborhoodCounts.length,
   };
 };
 

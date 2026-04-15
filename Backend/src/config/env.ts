@@ -18,6 +18,9 @@ const schema = z.object({
   VOTE_RATE_LIMIT_MAX:  z.coerce.number().default(30),
   MATCH_RADIUS_METERS:  z.coerce.number().default(2000),
   CIRCLE_AUTO_THRESHOLD:z.coerce.number().default(10),
+  VAPID_PUBLIC_KEY:     z.string().min(1),
+  VAPID_PRIVATE_KEY:    z.string().min(1),
+  VAPID_EMAIL:          z.string().email(),
 });
 
 const parsed = schema.safeParse(process.env);
