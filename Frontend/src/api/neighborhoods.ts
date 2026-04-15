@@ -5,6 +5,8 @@ export type Neighborhood = {
   id: string;
   name: string;
   city: string;
+  boundary?: any; // GeoJSON Polygon
+  mood?: MoodSummary;
 };
 
 export type MoodSummary = {

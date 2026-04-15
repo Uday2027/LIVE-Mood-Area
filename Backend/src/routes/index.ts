@@ -7,6 +7,10 @@ import { prisma } from '../config/database.js';
 import pinRoutes          from './pins.js';
 import neighborhoodRoutes from './neighborhoods.js';
 import authRoutes         from './auth.js';
+import matchRoutes        from './matches.js';
+import circleRoutes       from './circles.js';
+import storyRoutes        from './stories.js';
+import pingRoutes         from './pings.js';
 import * as AuthController from '../controllers/auth.controller.js';
 
 export const router = Router();
@@ -14,6 +18,10 @@ export const router = Router();
 router.use('/pins',          pinRoutes);
 router.use('/neighborhoods', neighborhoodRoutes);
 router.use('/auth',          authRoutes);
+router.use('/matches',       matchRoutes);
+router.use('/circles',       circleRoutes);
+router.use('/stories',       storyRoutes);
+router.use('/pings',         pingRoutes);
 
 // Personal pin history lives under /users namespace
 router.get('/users/me/pins', requireAuth, AuthController.getMyPins);

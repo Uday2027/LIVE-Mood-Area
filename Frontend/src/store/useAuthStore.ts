@@ -6,22 +6,29 @@ import type { AuthUser } from '@/api/auth';
 type AuthStore = {
   token: string | null;
   user: AuthUser | null;
-  setAuth: (token: string, user: AuthUser) => void;
-  clearAuth: () => void;
+  isAuthenticated: boolean;
+  setAuth: (payload: { token: string; user: AuthUser }) => void;
+  logout: () => void;
+  updateUser: (user: Partial<AuthUser>) => void;
 };
 
 export const useAuthStore = create<AuthStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       token: null,
       user:  null,
-      setAuth: (token, user) => {
+      isAuthenticated: false,
+      setAuth: ({ token, user }) => {
         localStorage.setItem('token', token);
-        set({ token, user });
+        set({ token, user, isAuthenticated: true });
       },
-      clearAuth: () => {
+      logout: () => {
         localStorage.removeItem('token');
-        set({ token: null, user: null });
+        set({ token: null, user: null, isAuthenticated: false });
+      },
+      updateUser: (partial) => {
+        const existing = get().user;
+        if (existing) set({ user: { ...existing, ...partial } });
       },
     }),
     { name: 'moodmap_auth' },

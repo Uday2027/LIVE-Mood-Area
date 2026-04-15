@@ -47,3 +47,13 @@ export const voteRateLimit = (req: Request, res: Response, next: NextFunction) =
   });
   return loaders.vote(req, res, next);
 };
+
+export const pingRateLimit = (req: Request, res: Response, next: NextFunction) => {
+  loaders.ping ??= rateLimit({
+    windowMs: 600_000,
+    max:      5,
+    store:    createStore('rl:ping:'),
+    keyGenerator: (r) => (r.headers['x-session-id'] as string | undefined) ?? r.ip ?? 'unknown',
+  });
+  return loaders.ping(req, res, next);
+};

@@ -16,6 +16,8 @@ const schema = z.object({
   RATE_LIMIT_MAX:       z.coerce.number().default(100),
   PIN_RATE_LIMIT_MAX:   z.coerce.number().default(10),
   VOTE_RATE_LIMIT_MAX:  z.coerce.number().default(30),
+  MATCH_RADIUS_METERS:  z.coerce.number().default(2000),
+  CIRCLE_AUTO_THRESHOLD:z.coerce.number().default(10),
 });
 
 const parsed = schema.safeParse(process.env);

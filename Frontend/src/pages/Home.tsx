@@ -7,12 +7,14 @@ import { PinForm } from '@/components/PinForm/PinForm';
 import { PinDetail } from '@/components/Panel/PinDetail';
 import { NeighborhoodPanel } from '@/components/Panel/NeighborhoodPanel';
 import { useSocket } from '@/hooks/useSocket';
+import { useNearby } from '@/hooks/useNearby';
 import { usePins } from '@/hooks/usePins';
 import type { Pin } from '@/api/pins';
 
 export default function Home() {
   useSocket();                     // establish real-time connection
   const { loading } = usePins();   // load active pins on mount
+  useNearby();                     // start polling nearby matches
 
   const [showForm,    setShowForm]    = useState(false);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);

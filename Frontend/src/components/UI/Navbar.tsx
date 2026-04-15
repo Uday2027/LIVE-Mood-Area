@@ -12,8 +12,8 @@ const NAV_LINKS = [
 
 export const Navbar = () => {
   const { pathname } = useLocation();
-  const user         = useAuthStore((s) => s.user);
-  const clearAuth    = useAuthStore((s) => s.clearAuth);
+  const user   = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
 
   return (
     <nav className="fixed top-0 inset-x-0 z-50 flex h-14 items-center justify-between border-b border-gray-200 bg-white/80 px-4 backdrop-blur-md">
@@ -45,18 +45,18 @@ export const Navbar = () => {
           <div className="flex items-center gap-3">
             <span className="text-sm text-gray-600">@{user.username}</span>
             <button
-              onClick={clearAuth}
               className="rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100"
+              onClick={logout}
             >
               Sign out
             </button>
           </div>
         ) : (
           <Link
-            to="/about"
+            to="/login"
             className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
           >
-            Explore
+            Sign In
           </Link>
         )}
       </div>

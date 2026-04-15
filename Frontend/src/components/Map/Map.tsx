@@ -28,6 +28,9 @@ const draftIcon = L.icon({
   shadowSize: [41, 41],
 });
 import { useEffect } from 'react';
+import { useMatchStore } from '@/store/useMatchStore';
+import { MoodHeatmap } from './MoodHeatmap';
+import { RadarPulse } from './RadarPulse';
 
 function MapPanner({ coords }: { coords: { lat: number; lng: number } | null }) {
   const map = useMap();
@@ -59,6 +62,11 @@ type Props = {
 export const MapView = ({ onPinClick, onMapClick, draftCoords, focusCoords, activeRoute }: Props) => {
   const pins = usePinStore((s) => s.pins);
   const mapRef = useRef(null);
+  
+  const nearbyCount = useMatchStore((s) => s.nearbyCount);
+  const nearbyMoods = useMatchStore((s) => s.nearbyMoods);
+
+  const dominantMood = nearbyMoods.length > 0 ? nearbyMoods.reduce((a, b) => a.count > b.count ? a : b).mood : undefined;
 
   const validPins = useMemo(() => {
     // Defensively filter any malformed pins that might accidentally exist in Zustand
@@ -83,17 +91,30 @@ export const MapView = ({ onPinClick, onMapClick, draftCoords, focusCoords, acti
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      
+      <MoodHeatmap />
+
       {onMapClick && <MapEvents onClick={onMapClick} />}
       <MapPanner coords={focusCoords ?? null} />
+      
       {activeRoute && (
         <Polyline
           positions={activeRoute}
           pathOptions={{ color: '#3b82f6', weight: 5, opacity: 0.8 }}
         />
       )}
+      
       {draftCoords && (
-        <Marker position={[draftCoords.lat, draftCoords.lng]} icon={draftIcon} opacity={0.6} />
+        <>
+          <Marker position={[draftCoords.lat, draftCoords.lng]} icon={draftIcon} opacity={0.6} />
+          <RadarPulse 
+            position={draftCoords} 
+            nearbyCount={nearbyCount} 
+            dominantMood={dominantMood} 
+          />
+        </>
       )}
+      
       {markers}
     </MapContainer>
   );

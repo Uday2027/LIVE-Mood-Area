@@ -1,6 +1,5 @@
 // src/components/Panel/NeighborhoodPanel.tsx
 import { usePinStore } from '@/store/usePinStore';
-import { MoodBadge } from '@/components/UI/MoodBadge';
 import { getMoodColor, MOOD_COLORS, type Mood } from '@/utils/moodColors';
 import { cn } from '@/lib/utils';
 import { MapPin, Clock, ChevronDown, ChevronRight } from 'lucide-react';

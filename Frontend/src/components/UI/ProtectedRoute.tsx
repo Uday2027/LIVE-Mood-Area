@@ -7,6 +7,6 @@ type Props = { children: ReactNode };
 
 export const ProtectedRoute = ({ children }: Props) => {
   const token = useAuthStore((s) => s.token);
-  if (!token) return <Navigate to="/" replace />;
+  if (!token) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };

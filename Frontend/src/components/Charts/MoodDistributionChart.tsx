@@ -1,6 +1,6 @@
 // src/components/Charts/MoodDistributionChart.tsx
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { MOOD_COLORS, type Mood } from '@/utils/moodColors';
+import { MOOD_COLORS } from '@/utils/moodColors';
 import type { Pin } from '@/api/pins';
 import { useMemo } from 'react';
 

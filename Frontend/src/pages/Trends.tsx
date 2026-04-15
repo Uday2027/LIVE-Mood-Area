@@ -149,7 +149,7 @@ export default function Trends() {
                         <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">{neighborhood.city}</p>
                       </div>
                       {snapshots[snapshots.length - 1]?.dominantMood && (
-                        <MoodBadge mood={snapshots[snapshots.length - 1].dominantMood} size="sm" />
+                        <MoodBadge mood={snapshots[snapshots.length - 1].dominantMood!} size="sm" />
                       )}
                     </div>
                   </div>

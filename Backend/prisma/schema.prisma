@@ -29,6 +29,29 @@ enum VoteType {
   DISPUTE
 }
 
+enum MatchStatus {
+  PENDING
+  CONNECTED
+  DECLINED
+  EXPIRED
+}
+
+enum CircleStatus {
+  ACTIVE
+  DISSOLVED
+}
+
+enum BadgeType {
+  FIRST_PIN
+  VERIFIED_10
+  LOCAL_CROWN
+  MOOD_STREAK_7
+  FIVE_NEIGHBORHOODS
+  PIONEER
+  SOCIAL_BUTTERFLY
+  NIGHT_OWL
+}
+
 // ── Models ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -36,11 +59,19 @@ model User {
   username        String   @unique
   email           String   @unique
   passwordHash    String
+  avatarUrl       String?
+  bio             String?  @db.VarChar(160)
+  isGhost         Boolean  @default(false)
+  totalPins       Int      @default(0)
   reputationScore Float    @default(1.0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  pins MoodPin[]
+  pins           MoodPin[]
+  circleMembers  CircleMember[]
+  circleMessages CircleMessage[]
+  badges         UserBadge[]
+  stories        MoodStory[]
 
   @@index([email])
 }
@@ -52,8 +83,10 @@ model Neighborhood {
   boundary  Json     // GeoJSON Polygon
   createdAt DateTime @default(now())
 
-  pins      MoodPin[]
-  snapshots MoodSnapshot[]
+  pins        MoodPin[]
+  snapshots   MoodSnapshot[]
+  vibeCircles VibeCircle[]
+  stories     MoodStory[]
 
   @@index([city])
 }
@@ -115,4 +148,141 @@ model MoodSnapshot {
   neighborhood Neighborhood @relation(fields: [neighborhoodId], references: [id])
 
   @@index([neighborhoodId, recordedAt])
+}
+
+model VibeMatch {
+  id              String      @id @default(uuid())
+  initiatorId     String      // session_id or user_id
+  targetId        String
+  initiatorMood   Mood
+  targetMood      Mood
+  distanceMeters  Int
+  status          MatchStatus @default(PENDING)
+  matchedAt       DateTime    @default(now())
+  respondedAt     DateTime?
+  expiresAt       DateTime
+  
+  @@index([initiatorId, status])
+  @@index([targetId, status])
+  @@index([expiresAt])
+}
+
+model VibeCircle {
+  id              String       @id @default(uuid())
+  neighborhoodId  String?
+  mood            Mood
+  name            String       @db.VarChar(60)
+  latitude        Float
+  longitude       Float
+  status          CircleStatus @default(ACTIVE)
+  memberCount     Int          @default(0)
+  createdAt       DateTime     @default(now())
+  dissolvesAt     DateTime
+
+  neighborhood    Neighborhood? @relation(fields: [neighborhoodId], references: [id])
+  members         CircleMember[]
+  messages        CircleMessage[]
+
+  @@index([status, dissolvesAt])
+  @@index([neighborhoodId, status])
+}
+
+model CircleMember {
+  id         String   @id @default(uuid())
+  circleId   String
+  sessionId  String
+  userId     String?
+  joinedAt   DateTime @default(now())
+  lastSeen   DateTime @default(now())
+
+  circle     VibeCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  user       User?      @relation(fields: [userId], references: [id])
+
+  @@unique([circleId, sessionId])
+  @@index([circleId])
+}
+
+model CircleMessage {
+  id         String   @id @default(uuid())
+  circleId   String
+  sessionId  String
+  userId     String?
+  content    String   @db.VarChar(300)
+  createdAt  DateTime @default(now())
+
+  circle     VibeCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  user       User?      @relation(fields: [userId], references: [id])
+
+  @@index([circleId, createdAt])
+}
+
+model UserBadge {
+  id         String    @id @default(uuid())
+  userId     String
+  badgeType  BadgeType
+  earnedAt   DateTime  @default(now())
+  metadata   Json?
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeType])
+}
+
+model MoodStory {
+  id             String   @id @default(uuid())
+  userId         String
+  neighborhoodId String
+  mood           Mood
+  content        String?  @db.VarChar(200)
+  imageUrl       String?
+  viewCount      Int      @default(0)
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
+
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  neighborhood   Neighborhood  @relation(fields: [neighborhoodId], references: [id])
+  views          StoryView[]
+
+  @@index([neighborhoodId, expiresAt])
+  @@index([userId])
+}
+
+model StoryView {
+  id             String   @id @default(uuid())
+  storyId        String
+  viewerSession  String
+  viewedAt       DateTime @default(now())
+
+  story          MoodStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, viewerSession])
+}
+
+model ProximityPing {
+  id              String   @id @default(uuid())
+  senderSession   String
+  receiverSession String
+  mood            Mood
+  latitude        Float
+  longitude       Float
+  seen            Boolean  @default(false)
+  sentAt          DateTime @default(now())
+  expiresAt       DateTime
+
+  @@index([receiverSession, seen])
+  @@index([expiresAt])
+}
+
+model Waitlist {
+  id             String   @id @default(uuid())
+  email          String   @unique @db.VarChar(100)
+  city           String   @db.VarChar(100)
+  referralCode   String   @unique @db.VarChar(12)
+  referredBy     String?  @db.VarChar(12)
+  referralCount  Int      @default(0)
+  position       Int
+  joinedAt       DateTime @default(now())
+
+  @@index([referralCode])
+  @@index([position])
 }
