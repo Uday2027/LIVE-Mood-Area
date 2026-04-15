@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 const NAV_LINKS = [
   { to: '/',          label: 'Map',       icon: MapPin },
   { to: '/trends',    label: 'Trends',    icon: TrendingUp },
+  { to: '/waitlist',  label: 'Waitlist',  icon: Info },
   { to: '/about',     label: 'About',      icon: Info },
 ];
 
@@ -43,7 +44,9 @@ export const Navbar = () => {
       <div>
         {user ? (
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600">@{user.username}</span>
+            <Link to="/profile" className="text-sm font-medium text-gray-600 hover:text-blue-600">
+              @{user.username}
+            </Link>
             <button
               className="rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100"
               onClick={logout}

@@ -10,6 +10,8 @@ import { useMatchStore } from '@/store/useMatchStore';
 import type { Pin } from '@/api/pins';
 import type { Match } from '@/api/matches';
 import type { CircleMessage } from '@/api/circles';
+import { usePingStore } from '@/store/usePingStore';
+import type { PingType } from '@/components/Social/ProximityPing';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL as string;
 
@@ -27,6 +29,8 @@ export const useSocket = (): void => {
   const activeCircle   = useCircleStore((s) => s.activeCircle);
   
   const addMatch       = useMatchStore((s) => s.addMatch);
+  
+  const addPing        = usePingStore((s) => s.addPing);
 
   useEffect(() => {
     // Session ID is needed in handshake for personalized rooms
@@ -82,13 +86,13 @@ export const useSocket = (): void => {
     });
 
     // Interaction Events
-    socket.on('proximity_ping', ({ ping }: any) => {
-      toast(`Someone nearby sent you a ${ping.mood} vibe ping!`);
+    socket.on('proximity_ping', ({ ping }: { ping: PingType }) => {
+      addPing(ping);
     });
     socket.on('badge_earned', ({ badge }: any) => {
       toast.success(`Badge Earned: ${badge.badge_type}!`);
     });
 
     return () => { socket.disconnect(); };
-  }, [addPin, removePin, updateCredib, addMessage, setMemberCount, clearCircle, activeCircle, addMatch, navigate]);
+  }, [addPin, removePin, updateCredib, addMessage, setMemberCount, clearCircle, activeCircle, addMatch, addPing, navigate]);
 };

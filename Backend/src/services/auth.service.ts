@@ -12,14 +12,29 @@ import type { RegisterBody, LoginBody } from '../validators/auth.validator.js';
 const SALT_ROUNDS = 12;
 
 const USER_PUBLIC_SELECT = {
-  id: true, username: true, email: true, reputationScore: true, createdAt: true,
+  id: true, username: true, email: true, reputationScore: true,
+  totalPins: true, isGhost: true, avatarUrl: true, bio: true, createdAt: true,
 } as const;
+
+type PinHistoryItem = {
+  mood: string;
+  createdAt: Date;
+};
+
+type BadgeItem = {
+  badgeType: string;
+  earnedAt: Date;
+};
 
 type PublicUser = {
   id: string;
   username: string;
   email: string;
   reputationScore: number;
+  totalPins: number;
+  isGhost: boolean;
+  avatarUrl: string | null;
+  bio: string | null;
   createdAt: Date;
 };
 
@@ -70,12 +85,37 @@ export const login = async (data: LoginBody): Promise<{ token: string; user: unk
 
 export const getProfile = async (userId: string): Promise<unknown> => {
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where:  { id: userId },
     select: USER_PUBLIC_SELECT,
   });
 
   if (user === null) throw new AppError('User not found', 404);
-  return user;
+
+  const [badges, pinHistory, moodCounts] = await Promise.all([
+    prisma.userBadge.findMany({
+      where:   { userId },
+      select:  { badgeType: true, earnedAt: true },
+      orderBy: { earnedAt: 'desc' },
+    }),
+    prisma.moodPin.findMany({
+      where:   { userId },
+      select:  { mood: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+      take:    90,
+    }),
+    prisma.moodPin.groupBy({
+      by:    ['mood'],
+      where: { userId },
+      _count: { mood: true },
+    }),
+  ]);
+
+  return {
+    ...user,
+    badges: badges as BadgeItem[],
+    pinHistory: pinHistory as PinHistoryItem[],
+    moodDistribution: moodCounts.map((m) => ({ mood: m.mood, count: m._count.mood })),
+  };
 };
 
 const signToken = (id: string, email: string, username: string): string =>

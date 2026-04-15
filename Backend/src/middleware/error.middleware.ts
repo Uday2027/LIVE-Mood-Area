@@ -14,15 +14,30 @@ export const errorMiddleware: ErrorRequestHandler = (
 ): void => {
   const appErr = err instanceof AppError ? err : null;
   const statusCode = appErr?.statusCode ?? 500;
-  const message    = appErr?.isOperational === true ? appErr.message : 'Internal server error';
+  const rawMessage = appErr?.isOperational === true ? appErr.message : 'Internal server error';
 
   if (appErr?.isOperational !== true) {
     logger.error('Unhandled error', { err, req: { method: req.method, url: req.url } });
   }
 
+  // Try to parse structured error payloads (e.g. 409 collision with collidedPin)
+  try {
+    const parsed = JSON.parse(rawMessage) as Record<string, unknown>;
+    res.status(statusCode).json({
+      success: false,
+      error: parsed,
+      ...(env.NODE_ENV === 'development' && {
+        stack: err instanceof Error ? err.stack : undefined,
+      }),
+    });
+    return;
+  } catch {
+    // Not JSON — emit as plain string error
+  }
+
   res.status(statusCode).json({
     success: false,
-    error: message,
+    error: rawMessage,
     ...(env.NODE_ENV === 'development' && {
       stack: err instanceof Error ? err.stack : undefined,
     }),

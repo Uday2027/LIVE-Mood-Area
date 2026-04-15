@@ -2,9 +2,24 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus, Loader2, MapPin } from 'lucide-react';
-import { register } from '@/api/auth';
+import { register as registerApi } from '@/api/auth';
 import { useAuthStore } from '@/store/useAuthStore';
 import toast from 'react-hot-toast';
+import { useForm, useWatch } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const registerSchema = z.object({
+  username: z.string().min(3, { message: 'Username must be at least 3 characters' }).max(30),
+  email: z.string().email({ message: 'Invalid email address' }),
+  password: z.string()
+    .min(8, { message: 'Password must be at least 8 characters' })
+    .regex(/[A-Z]/, { message: 'Password must contain at least 1 uppercase letter' })
+    .regex(/\d/, { message: 'Password must contain at least 1 number' }),
+  agreed: z.boolean().refine((val) => val === true, { message: 'You must agree to the Terms & Privacy Policy' }),
+});
+
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const getPasswordStrength = (pw: string): { label: string; color: string; width: string } => {
   if (pw.length < 6) return { label: 'Weak', color: 'bg-red-500', width: 'w-1/4' };
@@ -13,24 +28,32 @@ const getPasswordStrength = (pw: string): { label: string; color: string; width:
 };
 
 export default function Register() {
-  const [username, setUsername] = useState('');
-  const [email,    setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [agreed,   setAgreed]   = useState(false);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState<string | null>(null);
   const setAuth  = useAuthStore((s) => s.setAuth);
   const navigate = useNavigate();
 
-  const strength = getPasswordStrength(password);
+  const {
+    register: formRegister,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!agreed) { setError('Please accept the terms to continue.'); return; }
+  const passwordValue = useWatch({ control, name: 'password', defaultValue: '' });
+  const strength = getPasswordStrength(passwordValue);
+
+  const onSubmit = async (data: RegisterFormValues) => {
     setError(null);
     setLoading(true);
     try {
-      const { user, token } = await register({ username, email, password });
+      const { user, token } = await registerApi({ 
+        username: data.username, 
+        email: data.email, 
+        password: data.password 
+      });
       setAuth({ user, token });
       toast.success('Welcome to MoodMap! Drop your first vibe.');
       navigate('/');
@@ -52,46 +75,40 @@ export default function Register() {
           <p className="text-sm text-slate-400">Join MoodMap &amp; set your city's vibe</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div>
             <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-400">Username</label>
             <input
               id="reg-username"
               type="text"
-              required
-              minLength={3}
-              maxLength={30}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              {...formRegister('username')}
               className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="vibechecker99"
             />
+            {errors.username && <p className="mt-1 text-xs text-red-400">{errors.username.message}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-400">Email</label>
             <input
               id="reg-email"
               type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...formRegister('email')}
               className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="you@example.com"
             />
+            {errors.email && <p className="mt-1 text-xs text-red-400">{errors.email.message}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-400">Password</label>
             <input
               id="reg-password"
               type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              {...formRegister('password')}
               className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="Min 8 chars, 1 uppercase, 1 number"
             />
-            {password && (
+            {errors.password && <p className="mt-1 text-xs text-red-400">{errors.password.message}</p>}
+            {passwordValue && !errors.password && (
               <div className="mt-2">
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                   <div className={`h-full rounded-full transition-all ${strength.color} ${strength.width}`} />
@@ -101,16 +118,18 @@ export default function Register() {
             )}
           </div>
 
-          <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-400">
-            <input
-              id="reg-terms"
-              type="checkbox"
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-              className="mt-0.5 accent-blue-500"
-            />
-            I agree to the Terms &amp; Privacy Policy
-          </label>
+          <div>
+            <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-400">
+              <input
+                id="reg-terms"
+                type="checkbox"
+                {...formRegister('agreed')}
+                className="mt-0.5 accent-blue-500"
+              />
+              I agree to the Terms &amp; Privacy Policy
+            </label>
+            {errors.agreed && <p className="mt-1 text-xs text-red-400">{errors.agreed.message}</p>}
+          </div>
 
           {error && (
             <div className="rounded-lg bg-red-500/10 px-4 py-2.5 text-sm text-red-400 ring-1 ring-red-500/30">

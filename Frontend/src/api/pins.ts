@@ -6,6 +6,7 @@ export type Pin = {
   id: string;
   mood: Mood;
   message: string | null;
+  imageUrl: string | null;
   latitude: number;
   longitude: number;
   credibilityScore: number;
@@ -20,8 +21,10 @@ export type Pin = {
 export type CreatePinPayload = {
   mood: Mood;
   message?: string;
+  imageUrl?: string;
   latitude: number;
   longitude: number;
+  ignoreCollision?: boolean;
 };
 
 export const getPins = (): Promise<Pin[]> =>

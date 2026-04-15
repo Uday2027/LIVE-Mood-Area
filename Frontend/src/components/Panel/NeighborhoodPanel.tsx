@@ -3,8 +3,9 @@ import { usePinStore } from '@/store/usePinStore';
 import { getMoodColor, MOOD_COLORS, type Mood } from '@/utils/moodColors';
 import { cn } from '@/lib/utils';
 import { MapPin, Clock, ChevronDown, ChevronRight } from 'lucide-react';
-import { useMemo, useState, useEffect } from 'react';
 import type { Pin } from '@/api/pins';
+import { MoodStoriesRow } from '../Social/MoodStoriesRow';
+import { useMemo, useState, useEffect } from 'react';
 
 // Calculates a quick relative time string
 const timeAgo = (dateStr: string) => {
@@ -168,6 +169,9 @@ export const NeighborhoodPanel = ({ onPinClick }: Props) => {
           );
         })}
       </div>
+      
+      {/* ADD MOOD STORIES ROW HERE */}
+      <MoodStoriesRow neighborhoodId="default-neighborhood" /> // Placeholder ID since it's missing from current NeighborhoodPanel State
       
       {Object.values(groupedPins).every(arr => arr.length === 0) && (
         <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50/50 p-6 text-center mt-2">

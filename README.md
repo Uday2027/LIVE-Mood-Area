@@ -10,11 +10,13 @@ MoodMap is a real-time web application where users anonymously drop "mood pins" 
 
 - **Live Mood Map** — Interactive map with color-coded neighborhood vibes updating in real time
 - **Anonymous Mood Pins** — Drop a pin in seconds, no account needed
+- **Live Camera Pins (NEW)** — Pins require a live photo capture to verify the space right now.
+- **Radius Collision Safeguards (NEW)** — Eliminates map spam by guarding a 50m radius around pins!
 - **Crowd Verification** — Nearby users confirm or dispute pins to maintain data integrity
-- **Credibility Scoring** — Pins are weighted by how many people verified them
+- **Credibility Scoring** — Pins are weighted by how many people verified them. Confirming a pin extends its duration on the map by 30 mins!
 - **Mood Trends** — Charts showing how a neighborhood's vibe changes throughout the day
 - **Auto-Expiry** — Pins automatically disappear after 2 hours to keep data fresh
-- **Optional Accounts** — Save your pin history and earn badges
+- **Optional Accounts** — Save your pin history and earn badges, safeguarded with Hook-Form + Zod validation.
 - **Native In-App Routing** — Calculate and draw street-level routes from your GPS to any pin using OSRM
 - **Live Activity Feed** — Sidebar grouped by mood with real-time updates and map panning
 - **Smart Geocoding** — Automatically resolves GPS coordinates to human-readable location names

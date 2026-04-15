@@ -95,6 +95,7 @@ model MoodPin {
   id               String       @id @default(uuid())
   mood             Mood
   message          String?      @db.VarChar(100)
+  imageUrl         String?      @db.Text
   latitude         Float
   longitude        Float
   credibilityScore Float        @default(0.5)

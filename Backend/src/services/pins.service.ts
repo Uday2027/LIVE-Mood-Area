@@ -4,15 +4,15 @@
 import type { Server } from 'socket.io';
 import { prisma } from '../config/database.js';
 import { AppError } from '../utils/AppError.js';
-import { isPointInPolygon } from '../utils/geo.js';
+import { isPointInPolygon, haversineDistance } from '../utils/geo.js';
 import type { CreatePinBody } from '../validators/pin.validator.js';
 
 const PIN_LIFETIME_MS = 2 * 60 * 60 * 1_000; // 2 hours
 
-const ACTIVE_PIN_SELECT = {
   id: true,
   mood: true,
   message: true,
+  imageUrl: true,
   latitude: true,
   longitude: true,
   credibilityScore: true,
@@ -37,6 +37,22 @@ export const createPin = async (
   data: CreatePinInput,
   io: Server,
 ): Promise<unknown> => {
+  if (!data.ignoreCollision) {
+    const activePins = await prisma.moodPin.findMany({
+      where: { expiresAt: { gt: new Date() } },
+    });
+
+    for (const p of activePins) {
+      const distanceKm = haversineDistance(data.latitude, data.longitude, p.latitude, p.longitude);
+      if (distanceKm <= 0.05) {
+        throw new AppError(JSON.stringify({
+          message: 'There is already a pin here.',
+          collidedPin: p,
+        }), 409);
+      }
+    }
+  }
+
   const neighborhood = await resolveNeighborhood(data.latitude, data.longitude);
   const expiresAt    = new Date(Date.now() + PIN_LIFETIME_MS);
 
@@ -44,6 +60,7 @@ export const createPin = async (
     data: {
       mood:            data.mood,
       message:         data.message ?? null,
+      imageUrl:        data.imageUrl ?? null,
       latitude:        data.latitude,
       longitude:       data.longitude,
       sessionId:       data.sessionId,

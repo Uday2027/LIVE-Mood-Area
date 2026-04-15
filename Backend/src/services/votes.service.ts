@@ -46,7 +46,7 @@ export const castVote = async (params: CastVoteParams): Promise<{ credibilitySco
 
   const pin = await prisma.moodPin.findFirst({
     where: { id: pinId, expiresAt: { gt: new Date() } },
-    select: { id: true, sessionId: true },
+    select: { id: true, sessionId: true, expiresAt: true },
   });
 
   if (pin === null) throw new AppError('Pin not found or has expired', 404);
@@ -54,6 +54,11 @@ export const castVote = async (params: CastVoteParams): Promise<{ credibilitySco
 
   try {
     await prisma.pinVote.create({ data: { pinId, sessionId, vote } });
+    
+    if (vote === 'CONFIRM') {
+      const newExp = new Date(pin.expiresAt.getTime() + 30 * 60 * 1000);
+      await prisma.moodPin.update({ where: { id: pinId }, data: { expiresAt: newExp }});
+    }
   } catch (err) {
     if (
       err instanceof Prisma.PrismaClientKnownRequestError &&

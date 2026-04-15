@@ -6,9 +6,13 @@ import { MapView } from '@/components/Map/Map';
 import { PinForm } from '@/components/PinForm/PinForm';
 import { PinDetail } from '@/components/Panel/PinDetail';
 import { NeighborhoodPanel } from '@/components/Panel/NeighborhoodPanel';
+import { NearbyCount } from '@/components/Social/NearbyCount';
+import { VibeMatch } from '@/components/Social/VibeMatch';
+import { ProximityPing } from '@/components/Social/ProximityPing';
 import { useSocket } from '@/hooks/useSocket';
 import { useNearby } from '@/hooks/useNearby';
 import { usePins } from '@/hooks/usePins';
+import { usePingStore } from '@/store/usePingStore';
 import type { Pin } from '@/api/pins';
 
 export default function Home() {
@@ -17,9 +21,12 @@ export default function Home() {
   useNearby();                     // start polling nearby matches
 
   const [showForm,    setShowForm]    = useState(false);
+  const [showMatchPanel, setShowMatchPanel] = useState(false);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
   const [draftCoords, setDraftCoords] = useState<{lat: number, lng: number} | null>(null);
   const [activeRoute, setActiveRoute] = useState<[number, number][] | null>(null);
+
+  const { activePings, removePing } = usePingStore();
 
   const handlePinClick = useCallback((pin: Pin) => {
     setSelectedPin(pin);
@@ -110,6 +117,17 @@ export default function Home() {
           />
         </div>
       )}
+
+      <NearbyCount onOpenMatchPanel={() => setShowMatchPanel(true)} />
+      
+      {showMatchPanel && (
+        <VibeMatch onClose={() => setShowMatchPanel(false)} />
+      )}
+
+      {/* Renders any incoming pings */}
+      {activePings.map(ping => (
+         <ProximityPing key={ping.id} ping={ping} onDismiss={() => removePing(ping.id)} />
+      ))}
     </div>
   );
 }
