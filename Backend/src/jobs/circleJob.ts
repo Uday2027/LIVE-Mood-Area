@@ -74,6 +74,31 @@ const processCircles = async (io: Server): Promise<void> => {
 
         io.emit('new_circle', { circle });
         newCirclesCount++;
+
+        const eventPins = await prisma.moodPin.findMany({
+          where: { neighborhoodId: group.neighborhoodId, mood: group.mood, createdAt: { gte: new Date(Date.now() - 20 * 60 * 1000) } },
+        });
+
+        if (eventPins.length >= env.EVENT_CLUSTER_THRESHOLD) {
+           const existingEvent = await prisma.spontaneousEvent.findFirst({
+             where: { neighborhoodId: group.neighborhoodId, mood: group.mood, isActive: true }
+           });
+           
+           if (!existingEvent) {
+             await prisma.spontaneousEvent.create({
+               data: {
+                 neighborhoodId: group.neighborhoodId,
+                 mood: group.mood,
+                 latitude,
+                 longitude,
+                 pinCount: eventPins.length,
+                 circleId: circle.id,
+                 isActive: true
+               }
+             });
+             logger.info(`Spontaneous event created for ${group.mood} in neighborhood ${group.neighborhoodId}`);
+           }
+        }
       }
     }
   }

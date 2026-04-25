@@ -3,15 +3,23 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LogOut, Ghost, MapPin, Star, Award,
-  Calendar, TrendingUp, ChevronRight,
+  Calendar, TrendingUp, ChevronRight, Book
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { getMe } from '@/api/auth';
+import { getUserDiary } from '@/api/users';
 import { getMoodColor, type Mood, MOODS } from '@/utils/moodColors';
-import type { MoodDistEntry } from '@/api/auth';
+
 import toast from 'react-hot-toast';
 import { MoodCalendar } from '@/components/Profile/MoodCalendar';
+import type { DayHistory } from '@/components/Profile/MoodCalendar';
 import { MoodWrapped } from '@/components/Profile/MoodWrapped';
+import { MoodBadge } from '@/components/UI/MoodBadge';
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getPendingChecks, respondVibeCheck } from '@/api/vibeChecks';
+import { MessageSquare, Check, X } from 'lucide-react';
+
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -34,6 +42,27 @@ export default function Profile() {
   const logout     = useAuthStore((s) => s.logout);
   const updateUser = useAuthStore((s) => s.updateUser);
   const navigate   = useNavigate();
+  const queryClient = useQueryClient();
+
+  const { data: pendingChecks } = useQuery({
+    queryKey: ['pendingChecks'],
+    queryFn: getPendingChecks,
+  });
+
+  const { data: diaries } = useQuery({
+    queryKey: ['myDiaries'],
+    queryFn: getUserDiary,
+  });
+
+
+  const respondMutation = useMutation({
+    mutationFn: ({ id, mood }: { id: string; mood: string }) => respondVibeCheck(id, mood),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pendingChecks'] });
+      toast.success('Response sent!');
+    },
+  });
+
 
   useEffect(() => {
     getMe()
@@ -55,13 +84,18 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-3.5rem)] items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f0c29, #1a1a3e, #0f0c29)' }}>
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative">
-            <div className="h-16 w-16 rounded-full border-2 border-purple-500/30 border-t-purple-400 animate-spin" />
-          </div>
-          <p className="text-sm text-slate-400">Loading your vibe profile...</p>
+      <div className="min-h-[calc(100vh-3.5rem)] p-4 space-y-6" style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #1a1a3e 50%, #0f0c29 100%)' }}>
+        <div className="mt-12 flex flex-col items-center gap-4">
+          <div className="h-24 w-24 rounded-full bg-white/10 animate-pulse" />
+          <div className="h-6 w-32 rounded bg-white/10 animate-pulse" />
+          <div className="h-4 w-48 rounded bg-white/10 animate-pulse" />
         </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="h-24 rounded-xl bg-white/5 animate-pulse" />
+          <div className="h-24 rounded-xl bg-white/5 animate-pulse" />
+          <div className="h-24 rounded-xl bg-white/5 animate-pulse" />
+        </div>
+        <div className="h-32 rounded-xl bg-white/5 animate-pulse mt-8" />
       </div>
     );
   }
@@ -73,6 +107,25 @@ export default function Profile() {
   const pinHistory        = user.pinHistory ?? [];
   const allBadgeKeys      = Object.keys(BADGE_META);
   const initials          = user.username?.slice(0, 2).toUpperCase() ?? 'ME';
+
+  // Transform flat PinHistoryEntry[] → DayHistory[] expected by MoodCalendar
+  const dayHistory: DayHistory[] = (() => {
+    const map = new Map<string, { dominantMood: string; pinCount: number; moodCounts: Record<string, number> }>();
+    for (const entry of pinHistory) {
+      const date = entry.createdAt.split('T')[0]!;
+      if (!map.has(date)) map.set(date, { dominantMood: entry.mood, pinCount: 0, moodCounts: {} });
+      const d = map.get(date)!;
+      d.pinCount++;
+      d.moodCounts[entry.mood] = (d.moodCounts[entry.mood] ?? 0) + 1;
+      const dominant = Object.entries(d.moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+      if (dominant) d.dominantMood = dominant;
+    }
+    return Array.from(map.entries()).map(([date, v]) => ({
+      date,
+      dominantMood: v.dominantMood as Mood | null,
+      pinCount: v.pinCount,
+    }));
+  })();
 
   const totalMoodPins = moodDistribution.reduce((sum, m) => sum + m.count, 0);
   const getMoodPct = (mood: Mood): number => {
@@ -207,7 +260,7 @@ export default function Profile() {
 
         {/* Vibe History Calendar */}
         <Section icon={<Calendar className="size-4 text-emerald-400" />} title="Vibe History">
-          <MoodCalendar history={pinHistory} />
+          <MoodCalendar history={dayHistory} />
           <p className="mt-2 text-xs text-slate-500">
             {pinHistory.length > 0
               ? `${pinHistory.length} pins in the last 90 days`
@@ -215,7 +268,60 @@ export default function Profile() {
           </p>
         </Section>
 
+        {/* Vibe Checks */}
+        {pendingChecks && pendingChecks.length > 0 && (
+          <Section icon={<MessageSquare className="size-4 text-orange-400" />} title="Vibe Checks">
+            <div className="space-y-3">
+              {pendingChecks.map((check: any) => (
+                <div key={check.id} className="flex items-center justify-between rounded-xl bg-white/5 p-3 border border-white/5">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-sm">
+                      {check.sender.username.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white">@{check.sender.username}</p>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-tighter">sent a vibe check</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => respondMutation.mutate({ id: check.id, mood: 'CHILL' })}
+                      className="h-8 w-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center hover:bg-emerald-500/30 transition-colors"
+                    >
+                      <Check className="size-4" />
+                    </button>
+                    <button className="h-8 w-8 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/30 transition-colors">
+                      <X className="size-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* My Journal */}
+        {diaries && diaries.length > 0 && (
+          <Section icon={<Book className="size-4 text-blue-400" />} title="My Journal">
+            <div className="grid grid-cols-2 gap-3">
+              {diaries.map((diary: any) => (
+                <div key={diary.id} className="rounded-xl border border-white/10 bg-white/5 p-4 transition-colors hover:bg-white/10 cursor-pointer">
+                  <p className="text-xs font-bold text-slate-300">
+                    {new Date(diary.weekStart).toLocaleDateString()} - {new Date(diary.weekEnd).toLocaleDateString()}
+                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <MoodBadge mood={diary.summaryData.dominantMood} size="sm" />
+                    <span className="text-[10px] text-slate-400">{diary.summaryData.totalPins} pins</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
         {/* MoodWrapped */}
+
+
         <Section icon={<ChevronRight className="size-4 text-purple-400" />} title="This Week's Wrap">
           <MoodWrapped
             data={{

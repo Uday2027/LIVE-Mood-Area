@@ -8,6 +8,11 @@ import { MoodPinMarker } from './MoodPin';
 import type { Pin } from '@/api/pins';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { useQuery } from '@tanstack/react-query';
+import { getNearbyEvents } from '@/api/events';
+import { SpontaneousEventMarker } from './SpontaneousEventMarker';
+import MarkerClusterGroup from 'react-leaflet-cluster';
+
 
 // Dhaka default centre
 const DHAKA_CENTER: [number, number] = [23.8103, 90.4125];
@@ -68,6 +73,13 @@ export const MapView = ({ onPinClick, onMapClick, draftCoords, focusCoords, acti
 
   const dominantMood = nearbyMoods.length > 0 ? nearbyMoods.reduce((a, b) => a.count > b.count ? a : b).mood : undefined;
 
+  const { data: events } = useQuery({
+    queryKey: ['nearbyEvents', focusCoords ?? DHAKA_CENTER],
+    queryFn: () => getNearbyEvents(focusCoords?.lat ?? DHAKA_CENTER[0], focusCoords?.lng ?? DHAKA_CENTER[1]),
+    refetchInterval: 60_000,
+  });
+
+
   const validPins = useMemo(() => {
     // Defensively filter any malformed pins that might accidentally exist in Zustand
     return pins.filter((p) => p && p.id && typeof p.latitude === 'number' && typeof p.longitude === 'number');
@@ -115,7 +127,13 @@ export const MapView = ({ onPinClick, onMapClick, draftCoords, focusCoords, acti
         </>
       )}
       
-      {markers}
+      <MarkerClusterGroup chunkedLoading maxClusterRadius={60}>
+        {markers}
+      </MarkerClusterGroup>
+      
+      {events?.map((event: any) => (
+        <SpontaneousEventMarker key={`event-${event.id}`} event={event} />
+      ))}
     </MapContainer>
   );
 };

@@ -9,6 +9,7 @@ import { NeighborhoodPanel } from '@/components/Panel/NeighborhoodPanel';
 import { NearbyCount } from '@/components/Social/NearbyCount';
 import { VibeMatch } from '@/components/Social/VibeMatch';
 import { ProximityPing } from '@/components/Social/ProximityPing';
+import { QuestBanner } from '@/components/Gamification/QuestBanner';
 import { useSocket } from '@/hooks/useSocket';
 import { useNearby } from '@/hooks/useNearby';
 import { usePins } from '@/hooks/usePins';
@@ -119,6 +120,7 @@ export default function Home() {
       )}
 
       <NearbyCount onOpenMatchPanel={() => setShowMatchPanel(true)} />
+      <QuestBanner />
       
       {showMatchPanel && (
         <VibeMatch onClose={() => setShowMatchPanel(false)} />

@@ -72,6 +72,11 @@ model User {
   circleMessages CircleMessage[]
   badges         UserBadge[]
   stories        MoodStory[]
+  questCompletions QuestCompletion[]
+  moodDiaries      MoodDiary[]
+  sentVibeChecks   VibeCheck[] @relation("VibeCheckSender")
+  receivedVibeChecks VibeCheck[] @relation("VibeCheckReceiver")
+  pushSubscriptions PushSubscription[]
 
   @@index([email])
 }
@@ -87,6 +92,9 @@ model Neighborhood {
   snapshots   MoodSnapshot[]
   vibeCircles VibeCircle[]
   stories     MoodStory[]
+  battlesWon      NeighborhoodBattle[]
+  battleScores    BattleScore[]
+  events          SpontaneousEvent[]
 
   @@index([city])
 }
@@ -183,6 +191,7 @@ model VibeCircle {
   neighborhood    Neighborhood? @relation(fields: [neighborhoodId], references: [id])
   members         CircleMember[]
   messages        CircleMessage[]
+  events          SpontaneousEvent[]
 
   @@index([status, dissolvesAt])
   @@index([neighborhoodId, status])
@@ -286,4 +295,122 @@ model Waitlist {
 
   @@index([referralCode])
   @@index([position])
+}
+
+model DailyQuest {
+  id            String   @id @default(uuid())
+  questType     String   @db.VarChar(50)
+  description   String   @db.VarChar(200)
+  targetMood    Mood?
+  targetCount   Int
+  radiusMeters  Int?
+  createdDate   DateTime @db.Date
+  isActive      Boolean  @default(true)
+
+  completions   QuestCompletion[]
+
+  @@index([isActive, createdDate])
+}
+
+model QuestCompletion {
+  id          String   @id @default(uuid())
+  userId      String?
+  sessionId   String
+  questId     String
+  completedAt DateTime @default(now())
+  metadata    Json?
+
+  user        User?      @relation(fields: [userId], references: [id])
+  quest       DailyQuest @relation(fields: [questId], references: [id])
+
+  @@unique([userId, questId])
+  @@unique([sessionId, questId])
+}
+
+model NeighborhoodBattle {
+  id                     String   @id @default(uuid())
+  startDate              DateTime @db.Date
+  endDate                DateTime @db.Date
+  mood                   Mood
+  winnerNeighborhoodId   String?
+  isActive               Boolean  @default(true)
+
+  winnerNeighborhood     Neighborhood? @relation(fields: [winnerNeighborhoodId], references: [id])
+  scores                 BattleScore[]
+
+  @@index([isActive, endDate])
+}
+
+model BattleScore {
+  id               String   @id @default(uuid())
+  battleId         String
+  neighborhoodId   String
+  score            Float    @default(0.0)
+  pinCount         Int      @default(0)
+  avgCredibility   Float    @default(0.0)
+  recordedAt       DateTime @default(now())
+
+  battle           NeighborhoodBattle @relation(fields: [battleId], references: [id])
+  neighborhood     Neighborhood       @relation(fields: [neighborhoodId], references: [id])
+
+  @@index([battleId, recordedAt])
+}
+
+model MoodDiary {
+  id             String   @id @default(uuid())
+  userId         String
+  weekStart      DateTime @db.Date
+  weekEnd        DateTime @db.Date
+  summaryData    Json
+  generatedAt    DateTime @default(now())
+
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+}
+
+model SpontaneousEvent {
+  id             String   @id @default(uuid())
+  neighborhoodId String
+  mood           Mood
+  latitude       Float
+  longitude      Float
+  detectedAt     DateTime @default(now())
+  pinCount       Int
+  circleId       String?
+  isActive       Boolean  @default(true)
+
+  neighborhood   Neighborhood @relation(fields: [neighborhoodId], references: [id])
+  circle         VibeCircle?  @relation(fields: [circleId], references: [id])
+
+  @@index([neighborhoodId, isActive])
+}
+
+model VibeCheck {
+  id             String   @id @default(uuid())
+  senderId       String
+  receiverId     String
+  senderMood     Mood?
+  receiverMood   Mood?
+  sentAt         DateTime @default(now())
+  respondedAt    DateTime?
+  expiresAt      DateTime
+
+  sender         User @relation("VibeCheckSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver       User @relation("VibeCheckReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([receiverId, expiresAt])
+}
+
+model PushSubscription {
+  id             String   @id @default(uuid())
+  sessionId      String
+  userId         String?
+  subscription   Json
+  createdAt      DateTime @default(now())
+
+  user           User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([userId])
 }

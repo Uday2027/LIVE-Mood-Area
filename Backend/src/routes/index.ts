@@ -11,6 +11,13 @@ import matchRoutes        from './matches.js';
 import circleRoutes       from './circles.js';
 import storyRoutes        from './stories.js';
 import pingRoutes         from './pings.js';
+import userRoutes         from './users.js';
+import questRoutes        from './quests.js';
+import battleRoutes       from './battles.js';
+import eventRoutes        from './events.js';
+import vibeCheckRoutes    from './vibeChecks.js';
+import pushRoutes         from './push.js';
+import waitlistRoutes     from './waitlist.js';
 import * as AuthController from '../controllers/auth.controller.js';
 
 export const router = Router();
@@ -22,6 +29,13 @@ router.use('/matches',       matchRoutes);
 router.use('/circles',       circleRoutes);
 router.use('/stories',       storyRoutes);
 router.use('/pings',         pingRoutes);
+router.use('/users',         userRoutes);
+router.use('/quests',        questRoutes);
+router.use('/battles',       battleRoutes);
+router.use('/events',        eventRoutes);
+router.use('/vibe-checks',   vibeCheckRoutes);
+router.use('/push',          pushRoutes);
+router.use('/waitlist',      waitlistRoutes);
 
 // Personal pin history lives under /users namespace
 router.get('/users/me/pins', requireAuth, AuthController.getMyPins);

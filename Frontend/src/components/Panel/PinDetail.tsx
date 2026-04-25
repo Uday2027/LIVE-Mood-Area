@@ -30,13 +30,25 @@ export const PinDetail = ({ pin, onClose, onRouteFound }: Props) => {
 
   const handleVote = async (vote: 'CONFIRM' | 'DISPUTE') => {
     if (voted) return;
+
+    if (navigator.vibrate) {
+      navigator.vibrate([50]);
+    }
+
     setVoting(true);
     setError(null);
+    setVoted(true);
+
+    const previousScore = pin.credibilityScore;
+    const optimisticDiff = vote === 'CONFIRM' ? 0.05 : -0.05;
+    updateCredib(pin.id, Math.min(1, Math.max(0, previousScore + optimisticDiff)));
+
     try {
       const { credibilityScore } = await votePin(pin.id, vote);
       updateCredib(pin.id, credibilityScore);
-      setVoted(true);
     } catch (err) {
+      setVoted(false);
+      updateCredib(pin.id, previousScore);
       setError(typeof err === 'string' ? err : 'Vote failed');
     } finally {
       setVoting(false);

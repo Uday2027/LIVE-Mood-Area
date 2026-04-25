@@ -18,6 +18,10 @@ const schema = z.object({
   VOTE_RATE_LIMIT_MAX:  z.coerce.number().default(30),
   MATCH_RADIUS_METERS:  z.coerce.number().default(2000),
   CIRCLE_AUTO_THRESHOLD:z.coerce.number().default(10),
+  EVENT_CLUSTER_THRESHOLD: z.coerce.number().default(5),
+  VAPID_EMAIL:          z.string().default('mailto:admin@moodmap.app'),
+  VAPID_PUBLIC_KEY:     z.string().default(''),
+  VAPID_PRIVATE_KEY:    z.string().default(''),
 });
 
 const parsed = schema.safeParse(process.env);

@@ -3,11 +3,12 @@
 
 import { Router } from 'express';
 import * as NeighborhoodController from '../controllers/neighborhoods.controller.js';
+import { cache } from '../middleware/cache.js';
 
 const router = Router();
 
-router.get('/',               NeighborhoodController.getAllNeighborhoods);
-router.get('/:id/mood',       NeighborhoodController.getNeighborhoodMood);
-router.get('/:id/history',    NeighborhoodController.getNeighborhoodHistory);
+router.get('/',               cache(60), NeighborhoodController.getAllNeighborhoods);
+router.get('/:id/mood',       cache(30), NeighborhoodController.getNeighborhoodMood);
+router.get('/:id/history',    cache(60), NeighborhoodController.getNeighborhoodHistory);
 
 export default router;

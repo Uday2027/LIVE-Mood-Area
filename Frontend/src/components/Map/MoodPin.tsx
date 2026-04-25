@@ -1,6 +1,6 @@
 // src/components/Map/MoodPin.tsx
 // Individual pin marker — credibility-aware opacity per AGENT.md spec.
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { getMoodColor } from '@/utils/moodColors';
@@ -34,7 +34,7 @@ type Props = {
   onClick: (pin: Pin) => void;
 };
 
-export const MoodPinMarker = ({ pin, onClick }: Props) => {
+export const MoodPinMarker = React.memo(({ pin, onClick }: Props) => {
   const opacity = pinOpacity(pin.credibilityScore);
   const icon = useMemo(
     () => createMoodIcon(pin.mood, opacity),
@@ -50,4 +50,4 @@ export const MoodPinMarker = ({ pin, onClick }: Props) => {
       <Popup>{getMoodColor(pin.mood).label}</Popup>
     </Marker>
   );
-};
+});

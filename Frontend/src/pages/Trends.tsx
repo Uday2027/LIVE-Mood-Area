@@ -10,6 +10,7 @@ import {
 import { TrendChart } from '@/components/Charts/TrendChart';
 import { MoodDistributionChart } from '@/components/Charts/MoodDistributionChart';
 import { MoodBadge } from '@/components/UI/MoodBadge';
+import { BattleLeaderboard } from '@/components/Gamification/BattleLeaderboard';
 import { usePinStore } from '@/store/usePinStore';
 import { Users, MapPin, Activity, Zap } from 'lucide-react';
 
@@ -168,18 +169,10 @@ export default function Trends() {
           </div>
 
           {/* Sidebar / Distribution */}
-          <div className="lg:col-span-4 lg:sticky lg:top-8 self-start">
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-               <h3 className="mb-6 text-sm font-bold uppercase tracking-widest text-gray-900 border-b border-gray-50 pb-4">
-                 Vibe Distribution
-               </h3>
-               <MoodDistributionChart pins={pins} />
-               <div className="mt-6 flex flex-col gap-3">
-                 <p className="text-xs text-gray-500 leading-relaxed italic">
-                   "This chart analyzes every single active pin currently live on our map, 
-                   giving you a bird's-eye view of the city's overall energy."
-                 </p>
-               </div>
+          <div className="lg:col-span-4 lg:sticky lg:top-8 self-start space-y-6">
+            <MoodDistributionChart pins={pins} />
+            <div className="rounded-2xl border border-white/10 bg-slate-950 p-6 shadow-2xl">
+               <BattleLeaderboard />
             </div>
           </div>
         </div>
