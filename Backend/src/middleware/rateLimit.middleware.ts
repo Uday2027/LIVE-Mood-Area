@@ -15,7 +15,7 @@ const createStore = (prefix: string) =>
     prefix,
   });
 
-let loaders: Record<string, RequestHandler> = {};
+const loaders: Record<string, RequestHandler> = {};
 
 export const globalRateLimit = (req: Request, res: Response, next: NextFunction) => {
   loaders.global ??= rateLimit({
