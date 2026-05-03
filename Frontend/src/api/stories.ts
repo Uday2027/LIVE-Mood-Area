@@ -15,9 +15,10 @@ export type Story = {
 };
 
 export const getNeighborhoodStories = async (neighborhoodId: string): Promise<Story[]> => {
-  return await api.get(`/neighborhoods/${neighborhoodId}/stories`);
+  const result = await api.get('/stories', { params: { neighborhoodId } });
+  return Array.isArray(result) ? result : [];
 };
 
-export const createStory = async (data: { neighborhoodId: string; mood: Mood; content: string }): Promise<Story> => {
+export const createStory = async (data: { neighborhoodId: string; mood: Mood; content: string; imageUrl?: string }): Promise<Story> => {
   return await api.post('/stories', data);
 };

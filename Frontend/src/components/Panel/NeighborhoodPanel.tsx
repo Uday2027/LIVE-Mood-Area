@@ -83,6 +83,19 @@ export const NeighborhoodPanel = ({ onPinClick }: Props) => {
     return groups;
   }, [pins]);
 
+  // Derive the most common real neighborhoodId from loaded pins
+  const dominantNeighborhoodId = useMemo(() => {
+    const counts: Record<string, number> = {};
+    pins.forEach(p => {
+      if (p.neighborhoodId != null) {
+        const key = String(p.neighborhoodId);
+        counts[key] = (counts[key] ?? 0) + 1;
+      }
+    });
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    return sorted[0]?.[0] ?? null; // null = no real ID available
+  }, [pins]);
+
   return (
     <div className="flex flex-col gap-3 p-4">
       <div className="flex items-center gap-2 mb-4 mt-2">
@@ -170,8 +183,8 @@ export const NeighborhoodPanel = ({ onPinClick }: Props) => {
         })}
       </div>
       
-      {/* ADD MOOD STORIES ROW HERE */}
-      <MoodStoriesRow neighborhoodId="default-neighborhood" /> // Placeholder ID since it's missing from current NeighborhoodPanel State
+      {/* Only show MoodStoriesRow when we have a real numeric neighborhoodId */}
+      {dominantNeighborhoodId && <MoodStoriesRow neighborhoodId={dominantNeighborhoodId} />}
       
       {Object.values(groupedPins).every(arr => arr.length === 0) && (
         <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50/50 p-6 text-center mt-2">

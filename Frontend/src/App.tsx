@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { Navbar } from '@/components/UI/Navbar';
 import { ProtectedRoute } from '@/components/UI/ProtectedRoute';
-import { ConnectionBanner } from '@/components/UI/ConnectionBanner';
 import { ErrorBoundary } from 'react-error-boundary';
 
 // Eager-loaded pages (critical path)
@@ -38,7 +37,6 @@ export default function App() {
   return (
     <ErrorBoundary fallback={<div className="p-8 text-white text-center mt-20">Something went wrong. Please refresh the page.</div>}>
       <QueryClientProvider client={queryClient}>
-        <ConnectionBanner />
         <BrowserRouter>
         <Toaster
           position="top-center"

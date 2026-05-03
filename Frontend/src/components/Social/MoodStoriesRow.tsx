@@ -19,7 +19,8 @@ export const MoodStoriesRow = ({ neighborhoodId }: Props) => {
   const user = useAuthStore(s => s.user);
 
   useEffect(() => {
-    if (!neighborhoodId) return;
+    // Guard: only call API when neighborhoodId is a valid integer
+    if (!neighborhoodId || !/^\d+$/.test(neighborhoodId)) return;
     let mounted = true;
     getNeighborhoodStories(neighborhoodId)
       .then(data => { if(mounted) setStories(data); })

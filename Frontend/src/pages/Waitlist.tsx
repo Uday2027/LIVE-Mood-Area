@@ -102,7 +102,7 @@ export default function Waitlist() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
             </span>
-            {stats ? `${stats.totalSignups.toLocaleString()} people already waiting` : 'Loading…'}
+            {stats ? `${(stats.totalSignups ?? 0).toLocaleString()} people already waiting` : 'Loading…'}
           </div>
 
           <h1 className="text-5xl font-extrabold leading-tight sm:text-6xl">

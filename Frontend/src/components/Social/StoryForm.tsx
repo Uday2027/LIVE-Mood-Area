@@ -1,6 +1,6 @@
 // src/components/Social/StoryForm.tsx
-import { useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { X, Loader2, ImagePlus } from 'lucide-react';
 import { MoodSelector } from '@/components/PinForm/MoodSelector';
 import { MOOD_COLORS, type Mood } from '@/utils/moodColors';
 import { createStory, type Story } from '@/api/stories';
@@ -15,15 +15,31 @@ type Props = {
 export const StoryForm = ({ neighborhoodId, onClose, onSuccess }: Props) => {
   const [mood, setMood] = useState<Mood>('CHILL');
   const [content, setContent] = useState('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!content.trim() && !imagePreview) return;
 
     setLoading(true);
     try {
-      const story = await createStory({ neighborhoodId, mood, content });
+      const story = await createStory({
+        neighborhoodId,
+        mood,
+        content,
+        ...(imagePreview ? { imageUrl: imagePreview } : {}),
+      });
       toast.success('Story posted!');
       onSuccess(story);
       onClose();
@@ -55,6 +71,38 @@ export const StoryForm = ({ neighborhoodId, onClose, onSuccess }: Props) => {
             <MoodSelector value={mood} onChange={setMood} />
           </div>
 
+          {/* Image Upload */}
+          <div className="mb-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageChange}
+            />
+            {imagePreview ? (
+              <div className="relative rounded-2xl overflow-hidden h-40">
+                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setImagePreview(null)}
+                  className="absolute top-2 right-2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-black/20 bg-white/40 py-5 text-sm font-semibold text-gray-600 hover:border-black/40 hover:bg-white/60 transition-all"
+              >
+                <ImagePlus className="size-5" />
+                Add a photo
+              </button>
+            )}
+          </div>
+
           <div className="mb-6">
             <label className="mb-3 block text-xs font-bold uppercase tracking-wider text-gray-900/60">
               Say something (Optional)
@@ -63,7 +111,7 @@ export const StoryForm = ({ neighborhoodId, onClose, onSuccess }: Props) => {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="What's the vibe right now?"
-              className="h-28 w-full resize-none rounded-2xl border-0 bg-white/60 p-4 text-sm font-medium text-gray-900 placeholder-gray-500 shadow-inner focus:outline-none focus:ring-2 focus:ring-black/20"
+              className="h-24 w-full resize-none rounded-2xl border-0 bg-white/60 p-4 text-sm font-medium text-gray-900 placeholder-gray-500 shadow-inner focus:outline-none focus:ring-2 focus:ring-black/20"
               maxLength={100}
             />
             <div className="mt-2 text-right text-xs font-semibold text-gray-500">
@@ -73,7 +121,7 @@ export const StoryForm = ({ neighborhoodId, onClose, onSuccess }: Props) => {
 
           <button
             type="submit"
-            disabled={loading || !content.trim()}
+            disabled={loading || (!content.trim() && !imagePreview)}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 py-4 font-bold text-white shadow-xl transition-all hover:bg-gray-800 disabled:bg-gray-400 disabled:shadow-none"
           >
             {loading && <Loader2 className="size-4 animate-spin" />}

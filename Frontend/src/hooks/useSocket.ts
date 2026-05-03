@@ -13,6 +13,7 @@ import type { CircleMessage } from '@/api/circles';
 import { usePingStore } from '@/store/usePingStore';
 import { useConnectionStore } from '@/store/useConnectionStore';
 import type { PingType } from '@/components/Social/ProximityPing';
+import { getSessionId } from '@/utils/session';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL as string;
 
@@ -35,8 +36,8 @@ export const useSocket = (): void => {
   const setConnected   = useConnectionStore((s) => s.setConnected);
 
   useEffect(() => {
-    // Session ID is needed in handshake for personalized rooms
-    const sessionId = localStorage.getItem('x-session-id') || undefined;
+    // Use getSessionId() — stored under 'moodmap_session_id', auto-generates if missing
+    const sessionId = getSessionId();
     const socket = io(SOCKET_URL, { 
       transports: ['websocket'],
       auth: { sessionId }

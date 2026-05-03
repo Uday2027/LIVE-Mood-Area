@@ -25,9 +25,9 @@ export const QuestBanner = () => {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-20 left-4 right-4 z-40 mx-auto max-w-md md:bottom-6"
+        className="fixed bottom-24 left-4 right-4 z-[1001] mx-auto max-w-md md:bottom-8 pointer-events-none"
       >
-        <div className={`relative overflow-hidden rounded-2xl border p-4 shadow-2xl backdrop-blur-xl transition-colors duration-500 ${
+        <div className={`relative overflow-hidden rounded-2xl border p-4 shadow-2xl backdrop-blur-xl transition-colors duration-500 pointer-events-auto ${
           isCompleted 
             ? 'bg-emerald-500/10 border-emerald-500/20' 
             : 'bg-slate-900/80 border-white/10'

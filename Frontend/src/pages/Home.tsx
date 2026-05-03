@@ -1,7 +1,7 @@
 // src/pages/Home.tsx
 // Main map page — renders MapView, PinForm drawer, NeighborhoodPanel, and wires socket.
 import { useState, useCallback } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, History } from 'lucide-react';
 import { MapView } from '@/components/Map/Map';
 import { PinForm } from '@/components/PinForm/PinForm';
 import { PinDetail } from '@/components/Panel/PinDetail';
@@ -10,6 +10,8 @@ import { NearbyCount } from '@/components/Social/NearbyCount';
 import { VibeMatch } from '@/components/Social/VibeMatch';
 import { ProximityPing } from '@/components/Social/ProximityPing';
 import { QuestBanner } from '@/components/Gamification/QuestBanner';
+import { ConnectionBanner } from '@/components/UI/ConnectionBanner';
+import { MyPinsHistory } from '@/components/Panel/MyPinsHistory';
 import { useSocket } from '@/hooks/useSocket';
 import { useNearby } from '@/hooks/useNearby';
 import { usePins } from '@/hooks/usePins';
@@ -21,11 +23,12 @@ export default function Home() {
   const { loading } = usePins();   // load active pins on mount
   useNearby();                     // start polling nearby matches
 
-  const [showForm,    setShowForm]    = useState(false);
+  const [showForm,       setShowForm]       = useState(false);
   const [showMatchPanel, setShowMatchPanel] = useState(false);
-  const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
-  const [draftCoords, setDraftCoords] = useState<{lat: number, lng: number} | null>(null);
-  const [activeRoute, setActiveRoute] = useState<[number, number][] | null>(null);
+  const [showHistory,    setShowHistory]    = useState(false);
+  const [selectedPin,    setSelectedPin]    = useState<Pin | null>(null);
+  const [draftCoords,    setDraftCoords]    = useState<{lat: number, lng: number} | null>(null);
+  const [activeRoute,    setActiveRoute]    = useState<[number, number][] | null>(null);
 
   const { activePings, removePing } = usePingStore();
 
@@ -84,6 +87,17 @@ export default function Home() {
         >
           <Plus className="size-6" />
         </button>
+
+        {/* FAB — pin history */}
+        <button
+          id="my-pins-history-btn"
+          onClick={() => setShowHistory((v) => !v)}
+          className="absolute bottom-6 left-6 z-[1000] flex h-12 w-12 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg hover:bg-black active:scale-95 transition-all"
+          aria-label="My pin history"
+          title="My Pin History"
+        >
+          <History className="size-5" />
+        </button>
       </div>
 
       {/* Floating Panel — PinForm */}
@@ -119,8 +133,15 @@ export default function Home() {
         </div>
       )}
 
+      <ConnectionBanner />
       <NearbyCount onOpenMatchPanel={() => setShowMatchPanel(true)} />
       <QuestBanner />
+
+      <MyPinsHistory
+        open={showHistory}
+        onClose={() => setShowHistory(false)}
+        onPinClick={handlePinClick}
+      />
       
       {showMatchPanel && (
         <VibeMatch onClose={() => setShowMatchPanel(false)} />

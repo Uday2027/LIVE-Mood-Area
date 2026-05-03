@@ -1,0 +1,543 @@
+{
+  "info": {
+    "name": "MoodMap API",
+    "_postman_id": "moodmap-api-collection",
+    "description": "Complete API collection for MoodMap — all endpoints with example request bodies.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",   "value": "http://localhost:5000/api", "type": "string" },
+    { "key": "token",      "value": "",                           "type": "string" },
+    { "key": "session_id", "value": "b3f2a1e4-9c8d-4765-8b3a-2c1d0e5f6a7b", "type": "string" },
+    { "key": "pin_id",     "value": "",                           "type": "string" },
+    { "key": "circle_id",  "value": "",                           "type": "string" },
+    { "key": "match_id",   "value": "",                           "type": "string" },
+    { "key": "story_id",   "value": "",                           "type": "string" },
+    { "key": "ping_id",    "value": "",                           "type": "string" },
+    { "key": "user_id",    "value": "",                           "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🔒 Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.data && json.data.token) pm.collectionVariables.set('token', json.data.token);",
+            "if (json.data && json.data.user) pm.collectionVariables.set('user_id', json.data.user.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@moodmap.app\",\n  \"password\": \"Password1\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.data && json.data.token) pm.collectionVariables.set('token', json.data.token);",
+            "if (json.data && json.data.user) pm.collectionVariables.set('user_id', json.data.user.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@moodmap.app\",\n  \"password\": \"Password1\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📍 Pins",
+      "item": [
+        {
+          "name": "Get Active Pins",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": { "raw": "{{base_url}}/pins/active", "host": ["{{base_url}}"], "path": ["pins", "active"] }
+          }
+        },
+        {
+          "name": "Drop Pin",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.data && json.data.id) pm.collectionVariables.set('pin_id', json.data.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-session-id", "value": "{{session_id}}" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"mood\": \"HYPE\",\n  \"message\": \"This place is buzzing!\",\n  \"latitude\": 24.8607,\n  \"longitude\": 67.0011\n}" },
+            "url": { "raw": "{{base_url}}/pins", "host": ["{{base_url}}"], "path": ["pins"] }
+          }
+        },
+        {
+          "name": "Vote on Pin — CONFIRM",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-session-id", "value": "c4e3b2f1-7d6a-4891-9cde-f012345678ab" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"vote\": \"CONFIRM\"\n}" },
+            "url": { "raw": "{{base_url}}/pins/{{pin_id}}/vote", "host": ["{{base_url}}"], "path": ["pins", "{{pin_id}}", "vote"] }
+          }
+        },
+        {
+          "name": "Vote on Pin — DISPUTE",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-session-id", "value": "d5f4c3e2-8e7b-4902-adf1-012345678bcd" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"vote\": \"DISPUTE\"\n}" },
+            "url": { "raw": "{{base_url}}/pins/{{pin_id}}/vote", "host": ["{{base_url}}"], "path": ["pins", "{{pin_id}}", "vote"] }
+          }
+        },
+        {
+          "name": "Get Pin Votes",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/pins/{{pin_id}}/votes", "host": ["{{base_url}}"], "path": ["pins", "{{pin_id}}", "votes"] }
+          }
+        },
+        {
+          "name": "Delete Pin",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": { "raw": "{{base_url}}/pins/{{pin_id}}", "host": ["{{base_url}}"], "path": ["pins", "{{pin_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🗺️ Neighborhoods",
+      "item": [
+        {
+          "name": "Get All Neighborhoods",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/neighborhoods", "host": ["{{base_url}}"], "path": ["neighborhoods"] }
+          }
+        },
+        {
+          "name": "Get Neighborhood Mood",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/neighborhoods/1/mood", "host": ["{{base_url}}"], "path": ["neighborhoods", "1", "mood"] }
+          }
+        },
+        {
+          "name": "Get Neighborhood History (24h)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/neighborhoods/1/history", "host": ["{{base_url}}"], "path": ["neighborhoods", "1", "history"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🤝 Vibe Matches",
+      "item": [
+        {
+          "name": "Get Nearby Vibes",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": {
+              "raw": "{{base_url}}/matches/nearby?lat=24.8607&lng=67.0011",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "nearby"],
+              "query": [{ "key": "lat", "value": "24.8607" }, { "key": "lng", "value": "67.0011" }]
+            }
+          }
+        },
+        {
+          "name": "Get My Matches",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": { "raw": "{{base_url}}/matches", "host": ["{{base_url}}"], "path": ["matches"] }
+          }
+        },
+        {
+          "name": "Accept Match",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": { "raw": "{{base_url}}/matches/{{match_id}}/accept", "host": ["{{base_url}}"], "path": ["matches", "{{match_id}}", "accept"] }
+          }
+        },
+        {
+          "name": "Decline Match",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": { "raw": "{{base_url}}/matches/{{match_id}}/decline", "host": ["{{base_url}}"], "path": ["matches", "{{match_id}}", "decline"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💬 Vibe Circles",
+      "item": [
+        {
+          "name": "Get Active Circles (Near Me)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/circles?lat=24.8607&lng=67.0011",
+              "host": ["{{base_url}}"],
+              "path": ["circles"],
+              "query": [{ "key": "lat", "value": "24.8607" }, { "key": "lng", "value": "67.0011" }]
+            }
+          }
+        },
+        {
+          "name": "Get Circle By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/circles/{{circle_id}}", "host": ["{{base_url}}"], "path": ["circles", "{{circle_id}}"] }
+          }
+        },
+        {
+          "name": "Get Circle Messages",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": { "raw": "{{base_url}}/circles/{{circle_id}}/messages", "host": ["{{base_url}}"], "path": ["circles", "{{circle_id}}", "messages"] }
+          }
+        },
+        {
+          "name": "Join Circle",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": { "raw": "{{base_url}}/circles/{{circle_id}}/join", "host": ["{{base_url}}"], "path": ["circles", "{{circle_id}}", "join"] }
+          }
+        },
+        {
+          "name": "Leave Circle",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": { "raw": "{{base_url}}/circles/{{circle_id}}/leave", "host": ["{{base_url}}"], "path": ["circles", "{{circle_id}}", "leave"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📖 Mood Stories",
+      "item": [
+        {
+          "name": "Get Neighborhood Stories",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": {
+              "raw": "{{base_url}}/stories?neighborhoodId=1",
+              "host": ["{{base_url}}"],
+              "path": ["stories"],
+              "query": [{ "key": "neighborhoodId", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Post Story",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.data && json.data.id) pm.collectionVariables.set('story_id', json.data.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"neighborhoodId\": 1,\n  \"mood\": \"CHILL\",\n  \"content\": \"The vibe here is unreal tonight.\"\n}" },
+            "url": { "raw": "{{base_url}}/stories", "host": ["{{base_url}}"], "path": ["stories"] }
+          }
+        },
+        {
+          "name": "Delete Story",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/stories/{{story_id}}", "host": ["{{base_url}}"], "path": ["stories", "{{story_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📡 Proximity Pings",
+      "item": [
+        {
+          "name": "Send Ping",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.data && json.data.id) pm.collectionVariables.set('ping_id', json.data.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-session-id", "value": "{{session_id}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"receiverSession\": \"c4e3b2f1-7d6a-4891-9cde-f012345678ab\",\n  \"mood\": \"HYPE\",\n  \"latitude\": 24.8607,\n  \"longitude\": 67.0011\n}" },
+            "url": { "raw": "{{base_url}}/pings", "host": ["{{base_url}}"], "path": ["pings"] }
+          }
+        },
+        {
+          "name": "Get Pending Pings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": { "raw": "{{base_url}}/pings/pending", "host": ["{{base_url}}"], "path": ["pings", "pending"] }
+          }
+        },
+        {
+          "name": "Mark Ping Seen",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": { "raw": "{{base_url}}/pings/{{ping_id}}/seen", "host": ["{{base_url}}"], "path": ["pings", "{{ping_id}}", "seen"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 User Profile",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/users/me", "host": ["{{base_url}}"], "path": ["users", "me"] }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"coolvibe\",\n  \"bio\": \"Living for the HYPE moments\"\n}" },
+            "url": { "raw": "{{base_url}}/users/me", "host": ["{{base_url}}"], "path": ["users", "me"] }
+          }
+        },
+        {
+          "name": "Toggle Ghost Mode",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/users/me/ghost", "host": ["{{base_url}}"], "path": ["users", "me", "ghost"] }
+          }
+        },
+        {
+          "name": "Get My Pins (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/users/me/pins?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me", "pins"],
+              "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }]
+            }
+          }
+        },
+        {
+          "name": "Get My Mood History (30 days)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/users/me/history", "host": ["{{base_url}}"], "path": ["users", "me", "history"] }
+          }
+        },
+        {
+          "name": "Get My Mood Diary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/users/me/diary?week=2026-04-28",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me", "diary"],
+              "query": [{ "key": "week", "value": "2026-04-28" }]
+            }
+          }
+        },
+        {
+          "name": "Get Public Profile",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["users", "{{user_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎮 Gamification",
+      "item": [
+        {
+          "name": "Get Today's Quest",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": { "raw": "{{base_url}}/quests/today", "host": ["{{base_url}}"], "path": ["quests", "today"] }
+          }
+        },
+        {
+          "name": "Get Quest Progress",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-session-id", "value": "{{session_id}}" }],
+            "url": { "raw": "{{base_url}}/quests/my-progress", "host": ["{{base_url}}"], "path": ["quests", "my-progress"] }
+          }
+        },
+        {
+          "name": "Get Current Battle",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/battles/current", "host": ["{{base_url}}"], "path": ["battles", "current"] }
+          }
+        },
+        {
+          "name": "Get Battle History",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/battles/history", "host": ["{{base_url}}"], "path": ["battles", "history"] }
+          }
+        },
+        {
+          "name": "Get Nearby Events",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/events/nearby?lat=24.8607&lng=67.0011&radius=3000",
+              "host": ["{{base_url}}"],
+              "path": ["events", "nearby"],
+              "query": [{ "key": "lat", "value": "24.8607" }, { "key": "lng", "value": "67.0011" }, { "key": "radius", "value": "3000" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💡 Vibe Checks",
+      "item": [
+        {
+          "name": "Send Vibe Check",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"receiverId\": \"{{user_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/vibe-checks", "host": ["{{base_url}}"], "path": ["vibe-checks"] }
+          }
+        },
+        {
+          "name": "Get Pending Vibe Checks",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/vibe-checks/pending", "host": ["{{base_url}}"], "path": ["vibe-checks", "pending"] }
+          }
+        },
+        {
+          "name": "Respond to Vibe Check",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"mood\": \"CHILL\"\n}" },
+            "url": { "raw": "{{base_url}}/vibe-checks/VIBE_CHECK_ID/respond", "host": ["{{base_url}}"], "path": ["vibe-checks", "VIBE_CHECK_ID", "respond"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔔 Push Notifications",
+      "item": [
+        {
+          "name": "Subscribe to Push",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-session-id", "value": "{{session_id}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"subscription\": {\n    \"endpoint\": \"https://fcm.googleapis.com/fcm/send/example\",\n    \"keys\": {\n      \"p256dh\": \"example_p256dh_key\",\n      \"auth\": \"example_auth\"\n    }\n  }\n}" },
+            "url": { "raw": "{{base_url}}/push/subscribe", "host": ["{{base_url}}"], "path": ["push", "subscribe"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Waitlist",
+      "item": [
+        {
+          "name": "Join Waitlist",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"earlybird@example.com\",\n  \"city\": \"Sylhet\"\n}" },
+            "url": { "raw": "{{base_url}}/waitlist", "host": ["{{base_url}}"], "path": ["waitlist"] }
+          }
+        },
+        {
+          "name": "Join Waitlist with Referral",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"friend@example.com\",\n  \"city\": \"Sylhet\",\n  \"referralCode\": \"ABCD1234EFGH\"\n}" },
+            "url": { "raw": "{{base_url}}/waitlist", "host": ["{{base_url}}"], "path": ["waitlist"] }
+          }
+        },
+        {
+          "name": "Get Waitlist Stats",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/waitlist/stats", "host": ["{{base_url}}"], "path": ["waitlist", "stats"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "❤️ Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
+          }
+        }
+      ]
+    }
+  ]
+}

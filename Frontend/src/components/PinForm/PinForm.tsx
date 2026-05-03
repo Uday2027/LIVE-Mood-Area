@@ -24,7 +24,8 @@ export const PinForm = ({ onClose, selectedCoords, onGpsSuccess }: Props) => {
   const [collidedPin, setCollidedPin] = useState<Pin | null>(null);
   
   const { coords: gpsCoords, requesting, error: locError, requestLocation } = useLocation();
-  const addPin = usePinStore((s) => s.addPin);
+  const addPin   = usePinStore((s) => s.addPin);
+  const addMyPin  = usePinStore((s) => s.addMyPin);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -70,6 +71,7 @@ export const PinForm = ({ onClose, selectedCoords, onGpsSuccess }: Props) => {
         ignoreCollision,
       });
       addPin(pin);
+      addMyPin(pin);   // persist to local history
       onClose();
     } catch (err: unknown) {
       // Axios interceptor returns err.response.data.error — already a parsed object for 409
